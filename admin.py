@@ -46,7 +46,17 @@ def show_admin():
                 c.execute("INSERT INTO rotations (apparatus, athlete_id, rotation_order) VALUES (?, ?, ?)",
                           (apparatus, athlete_id[0], rotation_order))
                 conn.commit()
-        st.dataframe(c.execute("SELECT * FROM rotations").fetchall(), use_container_width=True)
+        rot_table = c.execute("""
+            SELECT 
+                r.id AS ID,
+                r.apparatus AS Attrezzo,
+                a.name || ' ' || a.surname AS Atleta,
+                r.rotation_order AS Ordine
+            FROM rotations r
+            JOIN athletes a ON a.id = r.athlete_id
+            ORDER BY r.apparatus, r.rotation_order
+        """).fetchall()
+        st.dataframe(rot_table, use_container_width=True)
 
     with tab4:
         st.subheader("Inserimento Punteggi")
