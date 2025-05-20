@@ -46,6 +46,7 @@ def show_admin():
                 c.execute("INSERT INTO rotations (apparatus, athlete_id, rotation_order) VALUES (?, ?, ?)",
                           (apparatus, athlete_id[0], rotation_order))
                 conn.commit()
+
         rot_table = c.execute("""
             SELECT 
                 r.id AS ID,
