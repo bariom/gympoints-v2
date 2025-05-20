@@ -1,0 +1,50 @@
+import sqlite3
+
+conn = sqlite3.connect("gym.db")
+c = conn.cursor()
+
+# Tabelle principali
+c.execute("""
+CREATE TABLE IF NOT EXISTS athletes (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    surname TEXT NOT NULL,
+    club TEXT,
+    category TEXT
+)
+""")
+
+c.execute("""
+CREATE TABLE IF NOT EXISTS judges (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    surname TEXT NOT NULL,
+    apparatus TEXT NOT NULL
+)
+""")
+
+c.execute("""
+CREATE TABLE IF NOT EXISTS rotations (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    apparatus TEXT NOT NULL,
+    athlete_id INTEGER NOT NULL,
+    rotation_order INTEGER,
+    FOREIGN KEY (athlete_id) REFERENCES athletes(id)
+)
+""")
+
+c.execute("""
+CREATE TABLE IF NOT EXISTS scores (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    apparatus TEXT NOT NULL,
+    athlete_id INTEGER NOT NULL,
+    judge_id INTEGER NOT NULL,
+    score REAL NOT NULL,
+    FOREIGN KEY (athlete_id) REFERENCES athletes(id),
+    FOREIGN KEY (judge_id) REFERENCES judges(id)
+)
+""")
+
+conn.commit()
+conn.close()
+print("Database creato con successo.")
