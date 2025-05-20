@@ -15,13 +15,11 @@ def show_admin():
     with tab1:
         st.subheader("Gestione Atleti")
 
-        # Esporta atleti
         if st.button("Esporta elenco atleti in CSV"):
             df = pd.read_sql_query("SELECT name, surname, club, category FROM athletes", conn)
             csv = df.to_csv(index=False).encode('utf-8')
             st.download_button("Download CSV", csv, "atleti.csv", "text/csv")
 
-        # Importa atleti da CSV
         uploaded_file = st.file_uploader("Importa elenco atleti da CSV", type="csv")
         if uploaded_file:
             df = pd.read_csv(uploaded_file)
@@ -61,15 +59,12 @@ def show_admin():
 
     with tab3:
         st.subheader("Gestione Rotazioni")
-
         athletes = c.execute("SELECT id, name || ' ' || surname FROM athletes").fetchall()
 
         st.markdown("### Aggiungi nuova rotazione")
         with st.form("add_rotation"):
             athlete_id = st.selectbox("Atleta", athletes, format_func=lambda x: x[1], key="add_select")
-            apparatus = st.selectbox("Attrezzo",
-                                     ["Suolo", "Cavallo a maniglie", "Anelli", "Volteggio", "Parallele", "Sbarra"],
-                                     key="add_apparatus")
+            apparatus = st.selectbox("Attrezzo", ["Suolo", "Cavallo a maniglie", "Anelli", "Volteggio", "Parallele", "Sbarra"], key="add_apparatus")
             rotation_order = st.number_input("Ordine di rotazione", min_value=1, step=1, key="add_order")
             if st.form_submit_button("Aggiungi rotazione"):
                 c.execute("INSERT INTO rotations (apparatus, athlete_id, rotation_order) VALUES (?, ?, ?)",
@@ -77,33 +72,29 @@ def show_admin():
                 conn.commit()
                 st.success("Rotazione aggiunta correttamente")
 
-        st.markdown("### Modifica rotazione esistente")
-        rotation_rows = c.execute("""
-            SELECT r.id, a.name || ' ' || a.surname || ' - ' || r.apparatus 
-            FROM rotations r 
-            JOIN athletes a ON a.id = r.athlete_id 
-            ORDER BY r.apparatus, r.rotation_order
-        """).fetchall()
+        st.markdown("### Modifica o elimina rotazione esistente")
+        rotation_rows = c.execute("SELECT r.id, a.name || ' ' || a.surname || ' - ' || r.apparatus FROM rotations r JOIN athletes a ON a.id = r.athlete_id ORDER BY r.apparatus, r.rotation_order").fetchall()
         rotation_map = {row[1]: row[0] for row in rotation_rows}
 
         if rotation_map:
-            selected_label = st.selectbox("Seleziona una rotazione da modificare", list(rotation_map.keys()),
-                                          key="edit_select")
+            selected_label = st.selectbox("Seleziona una rotazione da modificare o eliminare", list(rotation_map.keys()), key="edit_select")
             if selected_label in rotation_map:
                 selected_rotation_id = rotation_map[selected_label]
 
                 with st.form("edit_rotation"):
-                    new_athlete_id = st.selectbox("Nuovo Atleta", athletes, format_func=lambda x: x[1],
-                                                  key="edit_athlete")
-                    new_apparatus = st.selectbox("Nuovo Attrezzo",
-                                                 ["Suolo", "Cavallo a maniglie", "Anelli", "Volteggio", "Parallele",
-                                                  "Sbarra"], key="edit_apparatus")
+                    new_athlete_id = st.selectbox("Nuovo Atleta", athletes, format_func=lambda x: x[1], key="edit_athlete")
+                    new_apparatus = st.selectbox("Nuovo Attrezzo", ["Suolo", "Cavallo a maniglie", "Anelli", "Volteggio", "Parallele", "Sbarra"], key="edit_apparatus")
                     new_order = st.number_input("Nuovo Ordine di Rotazione", min_value=1, step=1, key="edit_order")
-                    if st.form_submit_button("Modifica Rotazione"):
-                        c.execute("UPDATE rotations SET athlete_id = ?, apparatus = ?, rotation_order = ? WHERE id = ?",
-                                  (new_athlete_id[0], new_apparatus, new_order, selected_rotation_id))
+                    delete = st.checkbox("Elimina questa rotazione")
+                    if st.form_submit_button("Applica modifiche"):
+                        if delete:
+                            c.execute("DELETE FROM rotations WHERE id = ?", (selected_rotation_id,))
+                            st.success("Rotazione eliminata")
+                        else:
+                            c.execute("UPDATE rotations SET athlete_id = ?, apparatus = ?, rotation_order = ? WHERE id = ?",
+                                      (new_athlete_id[0], new_apparatus, new_order, selected_rotation_id))
+                            st.success("Rotazione aggiornata correttamente")
                         conn.commit()
-                        st.success("Rotazione aggiornata correttamente")
         else:
             st.info("Nessuna rotazione disponibile da modificare.")
 
@@ -119,7 +110,6 @@ def show_admin():
             ORDER BY r.apparatus, r.rotation_order
         """).fetchall()
         st.dataframe(rot_table, use_container_width=True)
-
 
     with tab4:
         st.subheader("Inserimento Punteggi")

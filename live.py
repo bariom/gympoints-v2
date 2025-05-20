@@ -1,5 +1,6 @@
 import streamlit as st
 import sqlite3
+import time
 from db import get_connection
 
 def show_live():
@@ -7,13 +8,16 @@ def show_live():
     conn = get_connection()
     c = conn.cursor()
 
+    st_autorefresh = st.experimental_rerun if st.experimental_get_query_params().get("refresh") else None
+    st.experimental_set_query_params(refresh=str(time.time()))
+    time.sleep(20)
+
     attrezzi = ["Suolo", "Cavallo a maniglie", "Anelli", "Volteggio", "Parallele", "Sbarra"]
     cols = st.columns(3)
 
     for i, apparatus in enumerate(attrezzi):
         with cols[i % 3]:
             st.subheader(apparatus)
-            # Prende atleta corrente per attrezzo
             rot = c.execute("""
                 SELECT a.name, a.surname, r.id FROM rotations r
                 JOIN athletes a ON a.id = r.athlete_id
@@ -34,3 +38,5 @@ def show_live():
                 st.info("Nessun atleta in rotazione")
 
     conn.close()
+    if st_autorefresh:
+        st_autorefresh()

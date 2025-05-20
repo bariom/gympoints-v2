@@ -4,8 +4,10 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="580034fe-b43f-4fbd-a300-4d17bf8eba73" name="Changes" comment="Initial commit">
+    <list default="true" id="580034fe-b43f-4fbd-a300-4d17bf8eba73" name="Changes" comment="Modifica alle rotazioni">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/admin.py" beforeDir="false" afterPath="$PROJECT_DIR$/admin.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/live.py" beforeDir="false" afterPath="$PROJECT_DIR$/live.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -43,12 +45,42 @@
   </component>
   <component name="PropertiesComponent"><![CDATA[{
   "keyToString": {
+    "Python.setup_db.executor": "Run",
     "RunOnceActivity.OpenProjectViewOnStart": "true",
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "git-widget-placeholder": "master",
     "settings.editor.selected.configurable": "vcs.Git"
   }
 }]]></component>
+  <component name="RunManager">
+    <configuration name="setup_db" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="gympoints" />
+      <option name="ENV_FILES" value="" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/setup_db.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <recent_temporary>
+      <list>
+        <item itemvalue="Python.setup_db" />
+      </list>
+    </recent_temporary>
+  </component>
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
@@ -89,7 +121,79 @@
       <option name="project" value="LOCAL" />
       <updated>1747746541516</updated>
     </task>
-    <option name="localTasksCounter" value="4" />
+    <task id="LOCAL-00004" summary="Initial db commit">
+      <option name="closed" value="true" />
+      <created>1747749679119</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1747749679119</updated>
+    </task>
+    <task id="LOCAL-00005" summary="Correzione tabella rotazioni">
+      <option name="closed" value="true" />
+      <created>1747750246409</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1747750246409</updated>
+    </task>
+    <task id="LOCAL-00006" summary="Aggiunta del ranking">
+      <option name="closed" value="true" />
+      <created>1747750774724</created>
+      <option name="number" value="00006" />
+      <option name="presentableId" value="LOCAL-00006" />
+      <option name="project" value="LOCAL" />
+      <updated>1747750774724</updated>
+    </task>
+    <task id="LOCAL-00007" summary="export e import atleti">
+      <option name="closed" value="true" />
+      <created>1747751079537</created>
+      <option name="number" value="00007" />
+      <option name="presentableId" value="LOCAL-00007" />
+      <option name="project" value="LOCAL" />
+      <updated>1747751079537</updated>
+    </task>
+    <task id="LOCAL-00008" summary="Modifica alle rotazioni">
+      <option name="closed" value="true" />
+      <created>1747751844106</created>
+      <option name="number" value="00008" />
+      <option name="presentableId" value="LOCAL-00008" />
+      <option name="project" value="LOCAL" />
+      <updated>1747751844106</updated>
+    </task>
+    <task id="LOCAL-00009" summary="Modifica alle rotazioni">
+      <option name="closed" value="true" />
+      <created>1747752016302</created>
+      <option name="number" value="00009" />
+      <option name="presentableId" value="LOCAL-00009" />
+      <option name="project" value="LOCAL" />
+      <updated>1747752016302</updated>
+    </task>
+    <task id="LOCAL-00010" summary="Modifica alle rotazioni">
+      <option name="closed" value="true" />
+      <created>1747752466779</created>
+      <option name="number" value="00010" />
+      <option name="presentableId" value="LOCAL-00010" />
+      <option name="project" value="LOCAL" />
+      <updated>1747752466779</updated>
+    </task>
+    <task id="LOCAL-00011" summary="Modifica alle rotazioni">
+      <option name="closed" value="true" />
+      <created>1747752861200</created>
+      <option name="number" value="00011" />
+      <option name="presentableId" value="LOCAL-00011" />
+      <option name="project" value="LOCAL" />
+      <updated>1747752861200</updated>
+    </task>
+    <task id="LOCAL-00012" summary="Modifica alle rotazioni">
+      <option name="closed" value="true" />
+      <created>1747753217489</created>
+      <option name="number" value="00012" />
+      <option name="presentableId" value="LOCAL-00012" />
+      <option name="project" value="LOCAL" />
+      <updated>1747753217489</updated>
+    </task>
+    <option name="localTasksCounter" value="13" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -105,6 +209,11 @@
   </component>
   <component name="VcsManagerConfiguration">
     <MESSAGE value="Initial commit" />
-    <option name="LAST_COMMIT_MESSAGE" value="Initial commit" />
+    <MESSAGE value="Initial db commit" />
+    <MESSAGE value="Correzione tabella rotazioni" />
+    <MESSAGE value="Aggiunta del ranking" />
+    <MESSAGE value="export e import atleti" />
+    <MESSAGE value="Modifica alle rotazioni" />
+    <option name="LAST_COMMIT_MESSAGE" value="Modifica alle rotazioni" />
   </component>
 </project>
