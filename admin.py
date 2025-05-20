@@ -1,5 +1,7 @@
 import streamlit as st
 import sqlite3
+import pandas as pd
+from io import StringIO
 from db import get_connection
 
 def show_admin():
@@ -12,6 +14,23 @@ def show_admin():
 
     with tab1:
         st.subheader("Gestione Atleti")
+
+        # Esporta atleti
+        if st.button("Esporta elenco atleti in CSV"):
+            df = pd.read_sql_query("SELECT name, surname, club, category FROM athletes", conn)
+            csv = df.to_csv(index=False).encode('utf-8')
+            st.download_button("Download CSV", csv, "atleti.csv", "text/csv")
+
+        # Importa atleti da CSV
+        uploaded_file = st.file_uploader("Importa elenco atleti da CSV", type="csv")
+        if uploaded_file:
+            df = pd.read_csv(uploaded_file)
+            for _, row in df.iterrows():
+                c.execute("INSERT INTO athletes (name, surname, club, category) VALUES (?, ?, ?, ?)",
+                          (row['name'], row['surname'], row['club'], row['category']))
+            conn.commit()
+            st.success("Atleti importati correttamente")
+
         with st.form("add_athlete"):
             name = st.text_input("Nome")
             surname = st.text_input("Cognome")
