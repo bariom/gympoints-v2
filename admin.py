@@ -26,8 +26,13 @@ def show_admin():
         if uploaded_file:
             df = pd.read_csv(uploaded_file)
             for _, row in df.iterrows():
-                c.execute("INSERT INTO athletes (name, surname, club, category) VALUES (?, ?, ?, ?)",
-                          (row['name'], row['surname'], row['club'], row['category']))
+                exists = c.execute("""
+                    SELECT 1 FROM athletes 
+                    WHERE name = ? AND surname = ? AND club = ? AND category = ?
+                """, (row['name'], row['surname'], row['club'], row['category'])).fetchone()
+                if not exists:
+                    c.execute("INSERT INTO athletes (name, surname, club, category) VALUES (?, ?, ?, ?)",
+                              (row['name'], row['surname'], row['club'], row['category']))
             conn.commit()
             st.success("Atleti importati correttamente")
 
