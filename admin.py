@@ -63,20 +63,32 @@ def show_admin():
         st.subheader("Gestione Rotazioni")
         athletes = c.execute("SELECT id, name || ' ' || surname FROM athletes").fetchall()
 
-        rotation_rows = c.execute("SELECT r.id, a.name || ' ' || a.surname || ' - ' || r.apparatus FROM rotations r JOIN athletes a ON a.id = r.athlete_id ORDER BY r.apparatus, r.rotation_order").fetchall()
+        rotation_rows = c.execute("""
+            SELECT r.id, a.name || ' ' || a.surname || ' - ' || r.apparatus 
+            FROM rotations r 
+            JOIN athletes a ON a.id = r.athlete_id 
+            ORDER BY r.apparatus, r.rotation_order
+        """).fetchall()
         rotation_map = {row[1]: row[0] for row in rotation_rows}
-        selected_label = st.selectbox("Seleziona una rotazione da modificare", list(rotation_map.keys()))
-        selected_rotation_id = rotation_map[selected_label]
 
-        with st.form("edit_rotation"):
-            new_athlete_id = st.selectbox("Nuovo Atleta", athletes, format_func=lambda x: x[1])
-            new_apparatus = st.selectbox("Nuovo Attrezzo", ["Suolo", "Cavallo a maniglie", "Anelli", "Volteggio", "Parallele", "Sbarra"])
-            new_order = st.number_input("Nuovo Ordine di Rotazione", min_value=1, step=1)
-            if st.form_submit_button("Modifica Rotazione"):
-                c.execute("UPDATE rotations SET athlete_id = ?, apparatus = ?, rotation_order = ? WHERE id = ?",
-                          (new_athlete_id[0], new_apparatus, new_order, selected_rotation_id))
-                conn.commit()
-                st.success("Rotazione aggiornata correttamente")
+        if rotation_map:
+            selected_label = st.selectbox("Seleziona una rotazione da modificare", list(rotation_map.keys()))
+            if selected_label in rotation_map:
+                selected_rotation_id = rotation_map[selected_label]
+
+                with st.form("edit_rotation"):
+                    new_athlete_id = st.selectbox("Nuovo Atleta", athletes, format_func=lambda x: x[1])
+                    new_apparatus = st.selectbox("Nuovo Attrezzo", ["Suolo", "Cavallo a maniglie", "Anelli", "Volteggio", "Parallele", "Sbarra"])
+                    new_order = st.number_input("Nuovo Ordine di Rotazione", min_value=1, step=1)
+                    if st.form_submit_button("Modifica Rotazione"):
+                        c.execute(
+                            "UPDATE rotations SET athlete_id = ?, apparatus = ?, rotation_order = ? WHERE id = ?",
+                            (new_athlete_id[0], new_apparatus, new_order, selected_rotation_id)
+                        )
+                        conn.commit()
+                        st.success("Rotazione aggiornata correttamente")
+        else:
+            st.info("Nessuna rotazione disponibile da modificare.")
 
         rot_table = c.execute("""
             SELECT 
@@ -89,6 +101,7 @@ def show_admin():
             ORDER BY r.apparatus, r.rotation_order
         """).fetchall()
         st.dataframe(rot_table, use_container_width=True)
+
 
     with tab4:
         st.subheader("Inserimento Punteggi")
