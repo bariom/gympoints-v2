@@ -40,7 +40,12 @@ def show_live():
 
     for i, attrezzo in enumerate(attrezzi):
         col = col_map[i]
-        col.subheader(attrezzo)
+
+        # intestazione attrezzo in stile blu
+        col.markdown(
+            f"<div style='background-color:#003366; color:white; text-align:center; padding:8px; border-radius:6px; font-weight:bold; font-size:18px;'>{attrezzo.upper()}</div>",
+            unsafe_allow_html=True
+        )
 
         atleti = c.execute("""
             SELECT a.id, a.name || ' ' || a.surname AS nome
@@ -78,18 +83,18 @@ def show_live():
 
             if shown_at is None:
                 st.session_state["score_timers"][timer_key] = now
-                col.success(f"Punteggio: {media:.3f}")
+                col.success(f"{media:.3f}")
             elif now - shown_at < 20:
-                col.success(f"Punteggio: {media:.3f}")
+                col.success(f"{media:.3f}")
             else:
                 st.session_state["progresso_live"][key_prog] = index + 1
         else:
             col.warning("⏳ In attesa del punteggio di entrambi i giudici")
 
     if tutti_attrezzi_completati:
-        st.info("In attesa della rotazione.")
+        st.info("Tutti gli attrezzi hanno completato la rotazione. Attendere l'avanzamento manuale.")
 
-    # Se attivo, mostra classifica a destra
+    # Se attivo, mostra classifica a lato
     if show_ranking_active:
         with col4:
             st.markdown("<h4 style='text-align: center;'>Classifica</h4>", unsafe_allow_html=True)
