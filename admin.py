@@ -191,6 +191,10 @@ def show_admin():
             FROM rotations r
             JOIN athletes a ON a.id = r.athlete_id
             WHERE r.rotation_order = ?
+            AND (
+                SELECT COUNT(*) FROM scores s
+                WHERE s.athlete_id = r.athlete_id AND s.apparatus = r.apparatus
+            ) < 2
             ORDER BY r.apparatus
         """, (rotazione_corrente,)).fetchall()
 
