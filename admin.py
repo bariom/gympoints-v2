@@ -198,17 +198,39 @@ def show_admin():
             st.info("Nessuna rotazione disponibile per la rotazione corrente.")
         else:
             with st.form("add_score"):
-                rotation = st.selectbox("Rotazione", rotations, format_func=lambda x: x[1])
-                # Recupera attrezzo e atleta dalla rotazione selezionata
-                app = c.execute("SELECT apparatus, athlete_id FROM rotations WHERE id = ?", (rotation[0],)).fetchone()
-                apparatus, athlete_id = app
+                rotation = st.selectbox("Rotazione", rotations, format_func=lambda x: x[1], key="select_rotation")
 
-                # Seleziona solo giudici per quell'attrezzo
-                judges = c.execute("""
-                    SELECT id, name || ' ' || surname || ' (' || apparatus || ')'
-                    FROM judges
-                    WHERE apparatus = ?
-                """, (apparatus,)).fetchall()
+                if rotation:
+                    app = c.execute("SELECT apparatus, athlete_id FROM rotations WHERE id = ?",
+                                    (rotation[0],)).fetchone()
+                    apparatus, athlete_id = app
+
+                    judges = c.execute("""
+                        SELECT id, name || ' ' || surname || ' (' || apparatus || ')'
+                        FROM judges
+                        WHERE apparatus = ?
+                    """, (apparatus,)).fetchall()
+
+                    judge = st.selectbox("Giudice", judges, format_func=lambda x: x[1], key="judge_dynamic")
+
+                    score = st.number_input("Punteggio", min_value=0.0, max_value=20.0, step=0.05)
+
+                    if st.form_submit_button("Registra punteggio"):
+                        existing = c.execute("""
+                            SELECT 1 FROM scores
+                            WHERE apparatus = ? AND athlete_id = ? AND judge_id = ?
+                        """, (apparatus, athlete_id, judge[0])).fetchone()
+
+                        if existing:
+                            st.error(
+                                "Questo giudice ha già inserito un punteggio per questo atleta su questo attrezzo.")
+                        else:
+                            c.execute("""
+                                INSERT INTO scores (apparatus, athlete_id, judge_id, score)
+                                VALUES (?, ?, ?, ?)
+                            """, (apparatus, athlete_id, judge[0], score))
+                            conn.commit()
+                            st.success("Punteggio registrato correttamente")
 
                 if not judges:
                     st.warning(f"Nessun giudice assegnato a {apparatus}")
