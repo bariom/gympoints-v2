@@ -83,14 +83,11 @@ def show_giudice():
 
         if st.form_submit_button("Invia punteggio"):
             rot_id = selected_rotation[0]
-            # Ottieni atleta
             row = c.execute("SELECT athlete_id FROM rotations WHERE id = ?", (rot_id,)).fetchone()
             if not row:
                 st.error("Errore interno.")
             else:
                 atleta_id = row[0]
-
-                # Verifica se ha già votato
                 existing = c.execute("""
                     SELECT 1 FROM scores
                     WHERE athlete_id = ? AND apparatus = ? AND judge_id = ?
@@ -105,6 +102,15 @@ def show_giudice():
                     """, (selected_attrezzo, atleta_id, giudice_id, punteggio))
                     conn.commit()
                     st.success("Punteggio salvato correttamente.")
+
+            # 🔁 aggiorna la tabella dei punteggi
+            punteggi_assegnati = c.execute("""
+                SELECT a.name || ' ' || a.surname AS Atleta, s.apparatus, s.score
+                FROM scores s
+                JOIN athletes a ON a.id = s.athlete_id
+                WHERE s.judge_id = ?
+                ORDER BY s.apparatus, Atleta
+            """, (giudice_id,)).fetchall()
 
     if punteggi_assegnati:
         df_punteggi = pd.DataFrame(punteggi_assegnati, columns=["Atleta", "Attrezzo", "Punteggio"])
