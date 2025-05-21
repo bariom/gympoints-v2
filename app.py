@@ -3,6 +3,7 @@ from admin import show_admin
 from live import show_live
 from ranking import show_ranking
 
+# DEVE stare qui, prima di tutto
 st.set_page_config(page_title="GymPoints Live", layout="wide")
 
 st.sidebar.title("Menu")

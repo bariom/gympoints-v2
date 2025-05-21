@@ -4,7 +4,6 @@ from db import get_connection
 from streamlit_autorefresh import st_autorefresh
 
 def show_live():
-    st.set_page_config(page_title="Live Gara", layout="wide")
 
     # Auto-refresh ogni 20 secondi
     st_autorefresh(interval=20000, key="refresh_live")
