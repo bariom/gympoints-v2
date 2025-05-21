@@ -243,7 +243,20 @@ def show_admin():
                                 st.success("Punteggio registrato correttamente")
 
         st.markdown("### Tutti i punteggi")
-        st.dataframe(c.execute("SELECT * FROM scores").fetchall(), use_container_width=True)
+
+        df = pd.read_sql_query("""
+            SELECT 
+                a.name || ' ' || a.surname AS Atleta,
+                j.name || ' ' || j.surname AS Giudice,
+                s.apparatus AS Attrezzo,
+                s.score AS Punteggio
+            FROM scores s
+            JOIN athletes a ON a.id = s.athlete_id
+            JOIN judges j ON j.id = s.judge_id
+            ORDER BY s.apparatus, Atleta
+        """, conn)
+
+        st.dataframe(df, use_container_width=True)
 
 
     tab5 = st.tabs(["Stato Gara"])[0]
