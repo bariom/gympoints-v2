@@ -68,7 +68,16 @@ def show_ranking():
     """
 
     for i, row in enumerate(display_data, start=start + 1):
-        bg_color = "#f0f8ff" if i % 2 == 0 else "#ffffff"
+        # Evidenzia il podio
+        if i == 1:
+            bg_color = "#FFD700"  # oro
+        elif i == 2:
+            bg_color = "#C0C0C0"  # argento
+        elif i == 3:
+            bg_color = "#CD7F32"  # bronzo
+        else:
+            bg_color = "#f0f8ff" if i % 2 == 0 else "#ffffff"
+
         html += f"""
         <tr style='text-align: center; background-color: {bg_color};'>
             <td style='padding: 6px; font-weight: bold;'>{i}</td>
