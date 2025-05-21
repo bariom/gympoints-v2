@@ -2,7 +2,6 @@ import streamlit as st
 from db import get_connection
 
 def show_giudice():
-    st.set_page_config(page_title="Accesso Giudice", layout="centered")
     st.title("Pannello Giudice")
 
     params = st.query_params

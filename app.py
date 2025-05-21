@@ -2,9 +2,10 @@ import streamlit as st
 from admin import show_admin
 from live import show_live
 from ranking import show_ranking
-from giudice import show_giudice  # <-- nuova importazione
+from giudice import show_giudice
 
-st.set_page_config(page_title="GymPoints Live", layout="wide")
+# ✅ Questa deve essere la PRIMA istruzione Streamlit
+st.set_page_config(page_title="GymPoints", layout="wide")
 
 params = st.query_params
 admin_code = params.get("admin", "")
