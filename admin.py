@@ -59,7 +59,8 @@ def show_admin():
 
     with tab3:
         st.subheader("Gestione Rotazioni")
-        athletes = c.execute("SELECT id, name || ' ' || surname FROM athletes").fetchall()
+        athletes = c.execute("SELECT id, name || ' ' || surname || ' (' || club || ')' FROM athletes").fetchall()
+
 
         st.markdown("### Aggiungi nuova rotazione")
         with st.form("add_rotation"):
