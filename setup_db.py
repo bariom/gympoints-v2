@@ -14,6 +14,7 @@ CREATE TABLE IF NOT EXISTS athletes (
 )
 """)
 
+
 c.execute("""
 CREATE TABLE IF NOT EXISTS judges (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
