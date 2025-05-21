@@ -4,7 +4,7 @@ from db import get_connection
 from streamlit_autorefresh import st_autorefresh
 
 def show_ranking():
-    st.set_page_config(layout="wide")
+
 
     # Auto-refresh ogni 10 secondi
     count = st_autorefresh(interval=10_000, key="auto_refresh")
