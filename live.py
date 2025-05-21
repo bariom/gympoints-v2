@@ -118,8 +118,10 @@ def show_live():
                     border: 2px solid #00cc99;
                     border-radius: 6px;
                     padding: 6px 16px;
-                    margin-top: 6px;
-                    display: inline-block;
+                    margin-top: 10px;
+                    margin-left: auto;
+                    margin-right: auto;
+                    width: fit-content;
                     font-size: 26px;
                     font-weight: bold;
                     color: #009977;
