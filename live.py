@@ -69,9 +69,43 @@ def show_live():
 
             if shown_at is None:
                 st.session_state["score_timers"][timer_key] = now
-                col.markdown(f"<p style='text-align:center;font-size:40px;color:#ffff66;'>Punteggio: <strong>{media:.3f}</strong></p>", unsafe_allow_html=True)
+                col.markdown(
+                    f"""
+                    <div style='
+                        background-color:#222;
+                        color:#00ffcc;
+                        font-size:48px;
+                        text-align:center;
+                        padding:15px;
+                        border-radius:10px;
+                        margin:10px 0;
+                        font-weight:bold;
+                    '>
+                        PUNTEGGIO<br>{media:.3f}
+                    </div>
+                    """,
+                    unsafe_allow_html=True
+                )
+
             elif now - shown_at < 20:
-                col.markdown(f"<p style='text-align:center;font-size:40px;color:#ffff66;'>Punteggio: <strong>{media:.3f}</strong></p>", unsafe_allow_html=True)
+                col.markdown(
+                    f"""
+                    <div style='
+                        background-color:#222;
+                        color:#00ffcc;
+                        font-size:48px;
+                        text-align:center;
+                        padding:15px;
+                        border-radius:10px;
+                        margin:10px 0;
+                        font-weight:bold;
+                    '>
+                        PUNTEGGIO<br>{media:.3f}
+                    </div>
+                    """,
+                    unsafe_allow_html=True
+                )
+
             else:
                 st.session_state["progresso_live"][key_prog] = index + 1
         else:
