@@ -19,7 +19,8 @@ CREATE TABLE IF NOT EXISTS judges (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL,
     surname TEXT NOT NULL,
-    apparatus TEXT NOT NULL
+    apparatus TEXT NOT NULL,
+    code TEXT
 )
 """)
 

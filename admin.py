@@ -1,6 +1,7 @@
 import streamlit as st
 import sqlite3
 import pandas as pd
+import hashlib
 from io import StringIO
 from db import get_connection
 
@@ -45,17 +46,33 @@ def show_admin():
                 conn.commit()
         st.dataframe(c.execute("SELECT * FROM athletes").fetchall(), use_container_width=True)
 
+    def genera_codice_giudice(nome: str, cognome: str) -> str:
+        """Genera un codice a 4 cifre stabile per un giudice."""
+        combinazione = f"{nome.lower()}_{cognome.lower()}"
+        hash_val = hashlib.sha256(combinazione.encode()).hexdigest()
+        code = int(hash_val[:4], 16) % 10000
+        return str(code).zfill(4)
+
     with tab2:
         st.subheader("Gestione Giudici")
+
         with st.form("add_judge"):
             name = st.text_input("Nome Giudice")
             surname = st.text_input("Cognome Giudice")
-            apparatus = st.selectbox("Attrezzo", ["Suolo", "Cavallo a maniglie", "Anelli", "Volteggio", "Parallele", "Sbarra"])
+            apparatus = st.selectbox("Attrezzo",
+                                     ["Suolo", "Cavallo a maniglie", "Anelli", "Volteggio", "Parallele", "Sbarra"])
             if st.form_submit_button("Aggiungi giudice"):
-                c.execute("INSERT INTO judges (name, surname, apparatus) VALUES (?, ?, ?)",
-                          (name, surname, apparatus))
+                code = genera_codice_giudice(name, surname)
+                c.execute("INSERT INTO judges (name, surname, apparatus, code) VALUES (?, ?, ?, ?)",
+                          (name, surname, apparatus, code))
                 conn.commit()
-        st.dataframe(c.execute("SELECT * FROM judges").fetchall(), use_container_width=True)
+                st.success(f"Giudice aggiunto. Codice accesso: {code}")
+
+        # Mostra tutti i giudici con codice
+        st.dataframe(
+            c.execute("SELECT name, surname, apparatus, code FROM judges").fetchall(),
+            use_container_width=True
+        )
 
     with tab3:
         st.subheader("Gestione Rotazioni")
