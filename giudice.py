@@ -1,4 +1,5 @@
 import streamlit as st
+import pandas
 from db import get_connection
 
 def show_giudice():
@@ -50,6 +51,15 @@ def show_giudice():
     else:
         st.error("Errore: nessun attrezzo assegnato.")
 
+    # Trova i punteggi già attribuiti
+    punteggi_assegnati = c.execute("""
+        SELECT a.name || ' ' || a.surname AS Atleta, s.apparatus, s.score
+        FROM scores s
+        JOIN athletes a ON a.id = s.athlete_id
+        WHERE s.judge_id = ?
+        ORDER BY s.apparatus, Atleta
+    """, (giudice_id,)).fetchall()
+
     # Rotazione corrente
     rotazione_corrente = int(c.execute("SELECT value FROM state WHERE key = 'rotazione_corrente'").fetchone()[0])
 
@@ -95,5 +105,12 @@ def show_giudice():
                     """, (selected_attrezzo, atleta_id, giudice_id, punteggio))
                     conn.commit()
                     st.success("Punteggio salvato correttamente.")
+
+    if punteggi_assegnati:
+        df_punteggi = pd.DataFrame(punteggi_assegnati, columns=["Atleta", "Attrezzo", "Punteggio"])
+        st.subheader("Punteggi già assegnati")
+        st.table(df_punteggi)
+    else:
+        st.info("Nessun punteggio assegnato finora.")
 
     conn.close()
