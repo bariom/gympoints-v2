@@ -2,23 +2,22 @@ import streamlit as st
 from admin import show_admin
 from live import show_live
 from ranking import show_ranking
+from giudice import show_giudice  # <-- nuova importazione
 
 st.set_page_config(page_title="GymPoints Live", layout="wide")
 
-# ✅ Usa la nuova API
 params = st.query_params
-admin_mode = params.get("admin") == "1234"
+admin_code = params.get("admin", "")
+giudice_code = params.get("giudice", "")
 
-pages = ["Live Gara", "Classifica Generale"]
-if admin_mode:
-    pages.insert(1, "Amministrazione")
-
-st.sidebar.title("Menu")
-page = st.sidebar.radio("Vai a:", pages)
-
-if page == "Live Gara":
-    show_live()
-elif page == "Amministrazione":
+if giudice_code:
+    show_giudice()
+elif admin_code == "1234":
     show_admin()
-elif page == "Classifica Generale":
-    show_ranking()
+else:
+    st.sidebar.title("Menu")
+    page = st.sidebar.radio("Vai a:", ["Live Gara", "Classifica Generale"])
+    if page == "Live Gara":
+        show_live()
+    elif page == "Classifica Generale":
+        show_ranking()
