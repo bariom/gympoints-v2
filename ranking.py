@@ -38,25 +38,25 @@ def show_ranking():
 
     if not results:
         st.warning("Nessun punteggio disponibile per la classifica.")
-        st.markdown("<b>Test</b>", unsafe_allow_html=True)
         return
 
     per_page = 20
     total_pages = (len(results) - 1) // per_page + 1
 
-    # Aggiorna pagina
+    # Calcola range pagina corrente
     current_page = st.session_state["ranking_page"]
     start = current_page * per_page
     end = start + per_page
     display_data = results[start:end]
 
+    # Titolo
     st.markdown(
         "<h2 style='text-align: center;'>Classifica Generale - All Around</h2>",
         unsafe_allow_html=True
     )
 
-    html = """
-    <table style='width: 90%; margin: auto; border-collapse: collapse; font-size: 22px;'>
+    # Costruzione tabella
+    html = """<table style='width: 90%; margin: auto; border-collapse: collapse; font-size: 22px;'>
         <thead>
             <tr style='background-color: #003366; color: white; text-align: center;'>
                 <th style='padding: 8px;'>Posizione</th>
@@ -69,7 +69,7 @@ def show_ranking():
     """
 
     for i, row in enumerate(display_data, start=start + 1):
-        # Evidenzia il podio
+        # Evidenziazione podio
         if i == 1:
             bg_color = "#FFD700"  # oro
         elif i == 2:
@@ -79,18 +79,18 @@ def show_ranking():
         else:
             bg_color = "#f0f8ff" if i % 2 == 0 else "#ffffff"
 
-        html += f"""
-        <tr style='text-align: center; background-color: {bg_color};'>
-            <td style='padding: 6px; font-weight: bold;'>{i}</td>
-            <td style='padding: 6px;'>{row[0]}</td>
-            <td style='padding: 6px;'>{row[1]}</td>
-            <td style='padding: 6px; font-weight: bold; color: #006600;'>{row[2]:.3f}</td>
-        </tr>
-        """
+        html += (
+            f"<tr style='text-align: center; background-color: {bg_color};'>"
+            f"<td style='padding: 6px; font-weight: bold;'>{i}</td>"
+            f"<td style='padding: 6px;'>{row[0]}</td>"
+            f"<td style='padding: 6px;'>{row[1]}</td>"
+            f"<td style='padding: 6px; font-weight: bold; color: #006600;'>{row[2]:.3f}</td>"
+            f"</tr>"
+        )
 
     html += "</tbody></table>"
 
     st.markdown(html, unsafe_allow_html=True)
 
-    # Passa alla prossima pagina
+    # Passa alla prossima pagina ciclicamente
     st.session_state["ranking_page"] = (current_page + 1) % total_pages
