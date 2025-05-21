@@ -34,7 +34,7 @@ def show_giudice():
     # Trova tutti gli attrezzi assegnati al giudice
     attrezzi_giudice = c.execute("""
         SELECT DISTINCT apparatus FROM judges
-        WHERE LOWER(surname) = ? AND code = ?
+        WHERE surname = LOWER(?) AND code = ?
     """, (cognome, codice)).fetchall()
 
     attrezzi_lista = [row[0] for row in attrezzi_giudice]
@@ -44,7 +44,10 @@ def show_giudice():
         index=attrezzi_lista.index(attrezzo_orig) if attrezzo_orig in attrezzi_lista else 0
     )
 
-    st.success(f"Benvenuto {nome} {cognome.upper()} – Attrezzo selezionato: {selected_attrezzo}")
+    if selected_attrezzo:
+        st.success(f"Benvenuto {nome} {cognome.upper()} – Attrezzo selezionato: {selected_attrezzo}")
+    else:
+        st.error("Errore: nessun attrezzo assegnato.")
 
     # Rotazione corrente
     rotazione_corrente = int(c.execute("SELECT value FROM state WHERE key = 'rotazione_corrente'").fetchone()[0])
