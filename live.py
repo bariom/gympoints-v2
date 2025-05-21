@@ -78,4 +78,4 @@ def show_live():
             col.warning("In attesa del punteggio di entrambi i giudici")
 
     if tutti_attrezzi_completati:
-        st.info("Tutti gli attrezzi hanno completato la rotazione. Passare manualmente alla prossima.")
+        st.info("In attesa della rotazione.")
