@@ -10,7 +10,8 @@ def show_live():
     conn = get_connection()
     c = conn.cursor()
 
-    rotazione_corrente = st.session_state.get("rotazione_corrente", 1)
+    rotazione_corrente = int(c.execute("SELECT value FROM state WHERE key = 'rotazione_corrente'").fetchone()[0])
+
     st.title(f"Live Gara – Rotazione {rotazione_corrente}")
 
     attrezzi = ["Suolo", "Cavallo a maniglie", "Anelli", "Volteggio", "Parallele", "Sbarra"]

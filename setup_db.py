@@ -45,6 +45,13 @@ CREATE TABLE IF NOT EXISTS scores (
 )
 """)
 
+c.execute("""
+CREATE TABLE IF NOT EXISTS state (
+    key TEXT PRIMARY KEY,
+    value TEXT
+)
+""")
+
 conn.commit()
 conn.close()
 print("Database creato con successo.")

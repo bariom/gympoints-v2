@@ -239,9 +239,10 @@ def show_admin():
         st.subheader("Gestione Stato Rotazione")
         current_rotation = st.number_input("Rotazione corrente", min_value=1, step=1, value=st.session_state.get("rotazione_corrente", 1))
         if st.button("Aggiorna rotazione"):
-            st.session_state["rotazione_corrente"] = current_rotation
-            st.session_state["progresso_live"] = {}  # reset avanzamento per nuova rotazione
-            st.session_state["score_timers"] = {}  # reset timer punteggi
+            c.execute("REPLACE INTO state (key, value) VALUES (?, ?)", ("rotazione_corrente", str(current_rotation)))
+            conn.commit()
+            st.session_state["progresso_live"] = {}
+            st.session_state["score_timers"] = {}
             st.success(f"Rotazione impostata a {current_rotation}")
 
     conn.close()
