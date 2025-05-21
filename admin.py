@@ -275,6 +275,8 @@ def show_admin():
         current_rotation = st.number_input("Rotazione corrente", min_value=1, step=1, value=st.session_state.get("rotazione_corrente", 1))
         if st.button("Aggiorna rotazione"):
             st.session_state["rotazione_corrente"] = current_rotation
+            st.session_state["progresso_live"] = {}  # reset avanzamento per nuova rotazione
+            st.session_state["score_timers"] = {}  # reset timer punteggi
             st.success(f"Rotazione impostata a {current_rotation}")
 
     conn.close()
