@@ -148,6 +148,70 @@ def show_admin():
         conn.commit()
         st.success("Rotazioni 2–6 generate correttamente.")
 
+    st.markdown("### Generazione automatica rotazioni 2–6")
+
+    # Definizione ordine attrezzi
+    attrezzi = ["Suolo", "Cavallo a maniglie", "Anelli", "Volteggio", "Parallele", "Sbarra"]
+    attrezzo_to_next = {attrezzi[i]: attrezzi[(i + 1) % len(attrezzi)] for i in range(len(attrezzi))}
+
+    if st.button("🔁 Reset rotazioni"):
+        c.execute("DELETE FROM rotations")
+        conn.commit()
+        st.success("Tutte le rotazioni sono state eliminate.")
+
+    if st.button("👁️ Visualizza anteprima rotazioni 2–6"):
+        data_r1 = c.execute("""
+            SELECT r.apparatus, r.athlete_id, r.rotation_order, a.name || ' ' || a.surname
+            FROM rotations r
+            JOIN athletes a ON a.id = r.athlete_id
+            WHERE r.rotation_order = 1
+            ORDER BY r.id
+        """).fetchall()
+
+        gruppi = {att: [] for att in attrezzi}
+        for app, athlete_id, rot, full_name in data_r1:
+            gruppi[app].append((athlete_id, full_name))
+
+        for rot in range(2, 7):
+            st.markdown(f"#### Rotazione {rot}")
+            nuovo_gruppi = {att: [] for att in attrezzi}
+            for att in attrezzi:
+                from_group = list(gruppi[attrezzo_to_next[att]])
+                from_group.reverse()
+                nuovo_gruppi[att] = from_group
+                st.markdown(f"**{att}**:")
+                for idx, (aid, name) in enumerate(from_group, start=1):
+                    st.write(f"{idx}. {name}")
+            gruppi = nuovo_gruppi
+
+    if st.button("✅ Genera e salva rotazioni 2–6"):
+        data_r1 = c.execute("""
+            SELECT r.apparatus, r.athlete_id, r.rotation_order
+            FROM rotations r
+            WHERE r.rotation_order = 1
+            ORDER BY r.id
+        """).fetchall()
+
+        gruppi = {att: [] for att in attrezzi}
+        for app, athlete_id, order in data_r1:
+            gruppi[app].append(athlete_id)
+
+        for rot in range(2, 7):
+            nuovo_gruppi = {att: [] for att in attrezzi}
+            for att in attrezzi:
+                from_att = list(gruppi[attrezzo_to_next[att]])
+                from_att.reverse()
+                nuovo_gruppi[att] = from_att
+                for idx, athlete_id in enumerate(from_att):
+                    c.execute("""
+                        INSERT INTO rotations (apparatus, athlete_id, rotation_order)
+                        VALUES (?, ?, ?)
+                    """, (att, athlete_id, rot))
+            gruppi = nuovo_gruppi
+
+        conn.commit()
+        st.success("Rotazioni 2–6 generate e salvate correttamente.")
+
 
     with tab4:
         st.subheader("Inserimento Punteggi")
