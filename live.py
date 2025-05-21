@@ -29,7 +29,6 @@ def show_live():
     for i, attrezzo in enumerate(attrezzi):
         col = col_map[i]
 
-        # Recupero atleta
         atleti = c.execute("""
             SELECT a.id, a.name || ' ' || a.surname AS nome
             FROM rotations r
@@ -80,13 +79,29 @@ def show_live():
         tutti_attrezzi_completati = False
         atleta_id, nome = atleti[index]
 
-        # Recupera punteggi
+        # HTML comune a intestazione e nome
+        html = f"""
+        <div style="
+            background-color: #f8f9fc;
+            border-radius: 8px;
+            padding: 10px;
+            min-height: 160px;
+            text-align: center;
+        ">
+            <div style="background-color: #003366; color: white; font-size: 18px; font-weight: bold; border-radius: 6px; padding: 6px 12px; margin-bottom: 8px;">
+                {attrezzo.upper()}
+            </div>
+            <div style='font-size:18px; font-weight:600; color:#111;'>{nome}</div>
+        """
+
+        col.markdown(html, unsafe_allow_html=True)
+
+        # Recupera e mostra punteggi
         scores = c.execute("""
             SELECT score FROM scores 
             WHERE athlete_id = ? AND apparatus = ?
         """, (atleta_id, attrezzo)).fetchall()
 
-        punteggio_html = ""
         if len(scores) == 2:
             media = round(sum(s[0] for s in scores) / 2, 3)
             timer_key = f"{attrezzo}_{atleta_id}_{rotazione_corrente}"
@@ -97,7 +112,7 @@ def show_live():
                 shown_at = now
 
             if now - shown_at < 20:
-                punteggio_html = f"""
+                col.markdown(f"""
                 <div style="
                     background-color: #ffffff;
                     border: 2px solid #00cc99;
@@ -111,33 +126,18 @@ def show_live():
                 ">
                     {media:.3f}
                 </div>
-                """
+                </div> <!-- chiude box -->
+                """, unsafe_allow_html=True)
             else:
                 st.session_state["progresso_live"][key_prog] = index + 1
-
+                col.markdown("</div>", unsafe_allow_html=True)
         else:
-            punteggio_html = f"""
+            col.markdown(f"""
             <div style='font-size:14px; color:#ff9933; margin-top: 6px;'>
                 ⏳ In attesa del punteggio di entrambi i giudici
             </div>
-            """
-
-        html = f"""
-        <div style="
-            background-color: #f8f9fc;
-            border-radius: 8px;
-            padding: 10px;
-            min-height: 160px;
-            text-align: center;
-        ">
-            <div style="background-color: #003366; color: white; font-size: 18px; font-weight: bold; border-radius: 6px; padding: 6px 12px; margin-bottom: 8px;">
-                {attrezzo.upper()}
-            </div>
-            <div style='font-size:18px; font-weight:600; color:#111;'>{nome}</div>
-            {punteggio_html}
-        </div>
-        """
-        col.markdown(html, unsafe_allow_html=True)
+            </div> <!-- chiude box -->
+            """, unsafe_allow_html=True)
 
     if tutti_attrezzi_completati:
         st.markdown("""
