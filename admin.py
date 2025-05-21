@@ -126,4 +126,12 @@ def show_admin():
                 conn.commit()
         st.dataframe(c.execute("SELECT * FROM scores").fetchall(), use_container_width=True)
 
+    tab5 = st.tabs(["Stato Gara"])[0]
+    with tab5:
+        st.subheader("Gestione Stato Rotazione")
+        current_rotation = st.number_input("Rotazione corrente", min_value=1, step=1, value=st.session_state.get("rotazione_corrente", 1))
+        if st.button("Aggiorna rotazione"):
+            st.session_state["rotazione_corrente"] = current_rotation
+            st.success(f"Rotazione impostata a {current_rotation}")
+
     conn.close()
