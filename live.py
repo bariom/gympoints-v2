@@ -11,7 +11,7 @@ def show_live():
 
     rotazione_corrente = int(c.execute("SELECT value FROM state WHERE key = 'rotazione_corrente'").fetchone()[0])
 
-    st.markdown(f"<h1 style='text-align: center; font-size: 60px; font-weight: 700;'>Rotazione {rotazione_corrente}</h1>", unsafe_allow_html=True)
+    st.markdown(f"<h1 style='text-align: center; font-size: 36px; font-weight: 700; margin-bottom: 12px;'>Rotazione {rotazione_corrente}</h1>", unsafe_allow_html=True)
 
     attrezzi = ["Suolo", "Cavallo a maniglie", "Anelli", "Volteggio", "Parallele", "Sbarra"]
     col1, col2, col3 = st.columns(3)
@@ -29,26 +29,23 @@ def show_live():
     for i, attrezzo in enumerate(attrezzi):
         col = col_map[i]
 
-        # Titolo attrezzo
         col.markdown(f"""
         <div style="
             background-color: #003366;
             border-radius: 12px;
-            padding: 10px 16px;
-            margin-bottom: 10px;
+            padding: 6px 12px;
+            margin-bottom: 6px;
             text-align: center;
             color: white;
-            font-size: 22px;
+            font-size: 18px;
             font-weight: bold;
         ">
             {attrezzo.upper()}
         </div>
         """, unsafe_allow_html=True)
 
-        # Inizio box contenuto fisso
-        col.markdown("<div style='min-height: 260px;'>", unsafe_allow_html=True)
+        col.markdown("<div style='min-height: 180px;'>", unsafe_allow_html=True)
 
-        # Recupera atleti
         atleti = c.execute("""
             SELECT a.id, a.name || ' ' || a.surname AS nome
             FROM rotations r
@@ -58,7 +55,7 @@ def show_live():
         """, (attrezzo, rotazione_corrente)).fetchall()
 
         if not atleti:
-            col.markdown("<div style='text-align:center; font-size:16px;'>Nessun atleta assegnato.</div>", unsafe_allow_html=True)
+            col.markdown("<div style='text-align:center; font-size:14px;'>Nessun atleta assegnato.</div>", unsafe_allow_html=True)
             col.markdown("</div>", unsafe_allow_html=True)
             continue
 
@@ -66,21 +63,19 @@ def show_live():
         index = st.session_state["progresso_live"].get(key_prog, 0)
 
         if index >= len(atleti):
-            col.markdown("<div style='text-align:center; font-size:16px; color:#00cc99;'>Tutti gli atleti hanno completato la rotazione.</div>", unsafe_allow_html=True)
+            col.markdown("<div style='text-align:center; font-size:14px; color:#00cc99;'>Tutti gli atleti hanno completato la rotazione.</div>", unsafe_allow_html=True)
             col.markdown("</div>", unsafe_allow_html=True)
             continue
 
         tutti_attrezzi_completati = False
         atleta_id, nome = atleti[index]
 
-        # Nome atleta
         col.markdown(f"""
-        <div style='text-align:center; font-size:22px; font-weight:600; color:#111; margin-bottom:8px;'>
+        <div style='text-align:center; font-size:18px; font-weight:600; color:#111; margin-bottom:4px;'>
             {nome}
         </div>
         """, unsafe_allow_html=True)
 
-        # Punteggio
         scores = c.execute("""
             SELECT score FROM scores 
             WHERE athlete_id = ? AND apparatus = ?
@@ -98,14 +93,14 @@ def show_live():
                 col.markdown(f"""
                 <div style="
                     background-color: #f4f4f4;
-                    border: 3px solid #00cc99;
-                    border-radius: 10px;
-                    padding: 20px;
+                    border: 2px solid #00cc99;
+                    border-radius: 8px;
+                    padding: 10px;
                     text-align: center;
-                    font-size: 36px;
+                    font-size: 28px;
                     font-weight: bold;
                     color: #009977;
-                    margin-bottom: 10px;
+                    margin-bottom: 6px;
                 ">
                     {media:.3f}
                 </div>
@@ -114,17 +109,16 @@ def show_live():
                 st.session_state["progresso_live"][key_prog] = index + 1
         else:
             col.markdown(f"""
-            <div style='text-align:center; font-size:18px; color:#ff9933;'>
+            <div style='text-align:center; font-size:14px; color:#ff9933;'>
                 ⏳ In attesa del punteggio di entrambi i giudici
             </div>
             """, unsafe_allow_html=True)
 
-        # Fine box fisso
         col.markdown("</div>", unsafe_allow_html=True)
 
     if tutti_attrezzi_completati:
         st.markdown("""
-        <div style='text-align:center; font-size:22px; color:#00cc99; margin-top: 30px;'>
+        <div style='text-align:center; font-size:18px; color:#00cc99; margin-top: 20px;'>
             Tutti gli attrezzi hanno completato la rotazione.<br>
             Attendere l'avanzamento alla prossima rotazione.
         </div>
