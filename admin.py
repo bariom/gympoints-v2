@@ -111,42 +111,7 @@ def show_admin():
         """).fetchall()
         st.dataframe(rot_table, use_container_width=True)
 
-    st.markdown("### Generazione automatica rotazioni successive")
 
-    if st.button("Genera rotazioni 2–6 automaticamente"):
-        # Definizione attrezzi in ordine circolare
-        attrezzi = ["Suolo", "Cavallo a maniglie", "Anelli", "Volteggio", "Parallele", "Sbarra"]
-        attrezzo_to_next = {attrezzi[i]: attrezzi[(i + 1) % len(attrezzi)] for i in range(len(attrezzi))}
-
-        # Recupera rotazione 1
-        data_r1 = c.execute("""
-            SELECT r.apparatus, r.athlete_id, r.rotation_order
-            FROM rotations r
-            WHERE r.rotation_order = 1
-            ORDER BY r.id
-        """).fetchall()
-
-        # Organizza per attrezzo
-        gruppi = {att: [] for att in attrezzi}
-        for app, athlete_id, order in data_r1:
-            gruppi[app].append(athlete_id)
-
-        # Genera rotazioni 2 a 6
-        for rot in range(2, 7):
-            nuovo_gruppi = {att: [] for att in attrezzi}
-            for att in attrezzi:
-                from_att = [a for a in gruppi[attrezzo_to_next[att]]]  # spostamento circolare
-                from_att.reverse()  # inverti ordine
-                nuovo_gruppi[att] = from_att
-                for idx, athlete_id in enumerate(from_att):
-                    c.execute("""
-                        INSERT INTO rotations (apparatus, athlete_id, rotation_order)
-                        VALUES (?, ?, ?)
-                    """, (att, athlete_id, rot))
-            gruppi = nuovo_gruppi  # aggiorna per prossima rotazione
-
-        conn.commit()
-        st.success("Rotazioni 2–6 generate correttamente.")
 
     st.markdown("### Generazione automatica rotazioni 2–6")
 
