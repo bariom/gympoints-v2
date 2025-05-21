@@ -211,9 +211,9 @@ def show_admin():
                         WHERE apparatus = ?
                     """, (apparatus,)).fetchall()
 
-                    judge = st.selectbox("Giudice", judges, format_func=lambda x: x[1], key="judge_dynamic")
-
-                    score = st.number_input("Punteggio", min_value=0.0, max_value=20.0, step=0.05)
+                    judge = st.selectbox("Giudice", judges, format_func=lambda x: x[1], key=f"judge_{rotation[0]}")
+                    score = st.number_input("Punteggio", min_value=0.0, max_value=20.0, step=0.05,
+                                            key=f"score_{rotation[0]}")
 
                     if st.form_submit_button("Registra punteggio"):
                         existing = c.execute("""
