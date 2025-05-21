@@ -38,6 +38,7 @@ def show_ranking():
 
     if not results:
         st.warning("Nessun punteggio disponibile per la classifica.")
+        st.markdown("<b>Test</b>", unsafe_allow_html=True)
         return
 
     per_page = 20
@@ -53,7 +54,7 @@ def show_ranking():
         "<h2 style='text-align: center;'>Classifica Generale - All Around</h2>",
         unsafe_allow_html=True
     )
-    st.markdown("<b>Test</b>", unsafe_allow_html=True)
+
     html = """
     <table style='width: 90%; margin: auto; border-collapse: collapse; font-size: 22px;'>
         <thead>
