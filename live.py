@@ -4,8 +4,8 @@ from db import get_connection
 from streamlit_autorefresh import st_autorefresh
 
 def show_live():
-    # Auto-refresh ogni 20 secondi
-    st_autorefresh(interval=20000, key="refresh_live")
+    # Auto-refresh ogni 5 secondi
+    st_autorefresh(interval=5000, key="refresh_live")
 
     conn = get_connection()
     c = conn.cursor()
