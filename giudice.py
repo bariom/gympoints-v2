@@ -17,10 +17,11 @@ def show_giudice():
     conn = get_connection()
     c = conn.cursor()
 
-    # Cerca giudice
+    # Cerca giudice (uno qualsiasi con quel cognome e codice)
     giudice = c.execute("""
         SELECT id, name, surname, apparatus FROM judges
         WHERE LOWER(surname) = ? AND code = ?
+        LIMIT 1
     """, (cognome, codice)).fetchone()
 
     if not giudice:
@@ -28,20 +29,34 @@ def show_giudice():
         conn.close()
         return
 
-    giudice_id, nome, cognome, attrezzo = giudice
-    st.success(f"Benvenuto {nome} {cognome.upper()} – Attrezzo: {attrezzo}")
+    giudice_id, nome, cognome, attrezzo_orig = giudice
+
+    # Trova tutti gli attrezzi assegnati al giudice
+    attrezzi_giudice = c.execute("""
+        SELECT DISTINCT apparatus FROM judges
+        WHERE LOWER(surname) = ? AND code = ?
+    """, (cognome, codice)).fetchall()
+
+    attrezzi_lista = [row[0] for row in attrezzi_giudice]
+    selected_attrezzo = st.selectbox(
+        "Seleziona attrezzo",
+        attrezzi_lista,
+        index=attrezzi_lista.index(attrezzo_orig) if attrezzo_orig in attrezzi_lista else 0
+    )
+
+    st.success(f"Benvenuto {nome} {cognome.upper()} – Attrezzo selezionato: {selected_attrezzo}")
 
     # Rotazione corrente
     rotazione_corrente = int(c.execute("SELECT value FROM state WHERE key = 'rotazione_corrente'").fetchone()[0])
 
-    # Atleti della rotazione corrente per quell'attrezzo
+    # Atleti per rotazione e attrezzo selezionato
     rotazioni = c.execute("""
         SELECT r.id, a.name || ' ' || a.surname
         FROM rotations r
         JOIN athletes a ON a.id = r.athlete_id
         WHERE r.apparatus = ? AND r.rotation_order = ?
         ORDER BY r.id
-    """, (attrezzo, rotazione_corrente)).fetchall()
+    """, (selected_attrezzo, rotazione_corrente)).fetchall()
 
     if not rotazioni:
         st.info("Nessun atleta in gara su questo attrezzo per la rotazione corrente.")
@@ -65,7 +80,7 @@ def show_giudice():
                 existing = c.execute("""
                     SELECT 1 FROM scores
                     WHERE athlete_id = ? AND apparatus = ? AND judge_id = ?
-                """, (atleta_id, attrezzo, giudice_id)).fetchone()
+                """, (atleta_id, selected_attrezzo, giudice_id)).fetchone()
 
                 if existing:
                     st.warning("Hai già assegnato un punteggio a questo atleta.")
@@ -73,7 +88,7 @@ def show_giudice():
                     c.execute("""
                         INSERT INTO scores (apparatus, athlete_id, judge_id, score)
                         VALUES (?, ?, ?, ?)
-                    """, (attrezzo, atleta_id, giudice_id, punteggio))
+                    """, (selected_attrezzo, atleta_id, giudice_id, punteggio))
                     conn.commit()
                     st.success("Punteggio salvato correttamente.")
 
