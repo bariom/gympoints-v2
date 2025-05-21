@@ -4,16 +4,13 @@ from db import get_connection
 from streamlit_autorefresh import st_autorefresh
 
 def show_live():
-    # Auto-refresh ogni 5 secondi
     st_autorefresh(interval=5000, key="refresh_live")
 
     conn = get_connection()
     c = conn.cursor()
 
-    # Rotazione corrente letta dal DB
     rotazione_corrente = int(c.execute("SELECT value FROM state WHERE key = 'rotazione_corrente'").fetchone()[0])
 
-    # Titolo centrale grande
     st.markdown(f"<h1 style='text-align: center; font-size: 60px; font-weight: 700;'>Rotazione {rotazione_corrente}</h1>", unsafe_allow_html=True)
 
     attrezzi = ["Suolo", "Cavallo a maniglie", "Anelli", "Volteggio", "Parallele", "Sbarra"]
@@ -32,7 +29,7 @@ def show_live():
     for i, attrezzo in enumerate(attrezzi):
         col = col_map[i]
 
-        # Intestazione attrezzo
+        # Titolo attrezzo
         col.markdown(f"""
         <div style="
             background-color: #003366;
@@ -48,7 +45,10 @@ def show_live():
         </div>
         """, unsafe_allow_html=True)
 
-        # Ottieni atleti della rotazione corrente per l'attrezzo
+        # Inizio box contenuto fisso
+        col.markdown("<div style='min-height: 260px;'>", unsafe_allow_html=True)
+
+        # Recupera atleti
         atleti = c.execute("""
             SELECT a.id, a.name || ' ' || a.surname AS nome
             FROM rotations r
@@ -59,6 +59,7 @@ def show_live():
 
         if not atleti:
             col.markdown("<div style='text-align:center; font-size:16px;'>Nessun atleta assegnato.</div>", unsafe_allow_html=True)
+            col.markdown("</div>", unsafe_allow_html=True)
             continue
 
         key_prog = f"{attrezzo}_index_{rotazione_corrente}"
@@ -66,19 +67,20 @@ def show_live():
 
         if index >= len(atleti):
             col.markdown("<div style='text-align:center; font-size:16px; color:#00cc99;'>Tutti gli atleti hanno completato la rotazione.</div>", unsafe_allow_html=True)
+            col.markdown("</div>", unsafe_allow_html=True)
             continue
 
         tutti_attrezzi_completati = False
         atleta_id, nome = atleti[index]
 
-        # Mostra nome atleta
+        # Nome atleta
         col.markdown(f"""
-        <div style='text-align:center; font-size:24px; font-weight:600; color:#111; margin-bottom:8px;'>
+        <div style='text-align:center; font-size:22px; font-weight:600; color:#111; margin-bottom:8px;'>
             {nome}
         </div>
         """, unsafe_allow_html=True)
 
-        # Recupera punteggi
+        # Punteggio
         scores = c.execute("""
             SELECT score FROM scores 
             WHERE athlete_id = ? AND apparatus = ?
@@ -91,22 +93,8 @@ def show_live():
 
             if shown_at is None:
                 st.session_state["score_timers"][timer_key] = now
-                col.markdown(f"""
-                <div style="
-                    background-color: #f4f4f4;
-                    border: 3px solid #00cc99;
-                    border-radius: 10px;
-                    padding: 20px;
-                    text-align: center;
-                    font-size: 36px;
-                    font-weight: bold;
-                    color: #009977;
-                    margin-bottom: 10px;
-                ">
-                    {media:.3f}
-                </div>
-                """, unsafe_allow_html=True)
-            elif now - shown_at < 20:
+
+            if shown_at is None or now - shown_at < 20:
                 col.markdown(f"""
                 <div style="
                     background-color: #f4f4f4;
@@ -130,6 +118,9 @@ def show_live():
                 ⏳ In attesa del punteggio di entrambi i giudici
             </div>
             """, unsafe_allow_html=True)
+
+        # Fine box fisso
+        col.markdown("</div>", unsafe_allow_html=True)
 
     if tutti_attrezzi_completati:
         st.markdown("""
