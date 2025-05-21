@@ -40,7 +40,7 @@ def show_ranking():
         st.warning("Nessun punteggio disponibile per la classifica.")
         return
 
-    per_page = 20
+    per_page = 15
     total_pages = (len(results) - 1) // per_page + 1
 
     # Calcola range pagina corrente
