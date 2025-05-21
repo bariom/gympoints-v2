@@ -44,11 +44,17 @@ def show_live():
         </div>
         """, unsafe_allow_html=True)
 
+        # Contenitore compatto con padding e background chiaro
         col.markdown("""
         <div style='
-            min-height: 180px;
+            background-color: #f8f9fc;
+            border-radius: 8px;
+            padding: 8px 12px 12px 12px;
+            margin-bottom: 8px;
+            min-height: 140px;
             display: flex;
             flex-direction: column;
+            align-items: center;
             justify-content: flex-start;
             gap: 6px;
         '>
@@ -100,10 +106,10 @@ def show_live():
             if shown_at is None or now - shown_at < 20:
                 col.markdown(f"""
                 <div style="
-                    background-color: #f4f4f4;
+                    background-color: #ffffff;
                     border: 2px solid #00cc99;
-                    border-radius: 8px;
-                    padding: 10px;
+                    border-radius: 6px;
+                    padding: 8px 16px;
                     text-align: center;
                     font-size: 26px;
                     font-weight: bold;
