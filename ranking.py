@@ -50,8 +50,19 @@ def show_ranking():
     display_data = results[start:end]
 
     # Titolo
+    nome = None
+    conn = get_connection()
+    c = conn.cursor()
+    try:
+        nome = c.execute("SELECT value FROM state WHERE key = 'nome_competizione'").fetchone()
+    finally:
+        conn.close()
+
+    if nome:
+        st.markdown(f"<h2 style='text-align: center;'>{nome[0]}</h2>", unsafe_allow_html=True)
+
     st.markdown(
-        "<h2 style='text-align: center;'>Classifica Generale - All Around</h2>",
+        "<h3 style='text-align: center;'>Classifica Generale - All Around</h3>",
         unsafe_allow_html=True
     )
 

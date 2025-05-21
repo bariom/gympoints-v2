@@ -9,8 +9,11 @@ def show_live():
     conn = get_connection()
     c = conn.cursor()
 
-    rotazione_corrente = int(c.execute("SELECT value FROM state WHERE key = 'rotazione_corrente'").fetchone()[0])
+    nome = c.execute("SELECT value FROM state WHERE key = 'nome_competizione'").fetchone()
+    if nome:
+        st.markdown(f"<h2 style='text-align: center;'>{nome[0]}</h2>", unsafe_allow_html=True)
 
+    rotazione_corrente = int(c.execute("SELECT value FROM state WHERE key = 'rotazione_corrente'").fetchone()[0])
     st.markdown(f"<h1 style='text-align: center; font-size: 36px;'>Rotazione {rotazione_corrente}</h1>", unsafe_allow_html=True)
 
     attrezzi = ["Suolo", "Cavallo a maniglie", "Anelli", "Volteggio", "Parallele", "Sbarra"]

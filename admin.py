@@ -274,4 +274,18 @@ def show_admin():
             st.session_state["score_timers"] = {}
             st.success(f"Rotazione impostata a {current_rotation}")
 
+    tab6 = st.tabs(["Impostazioni"])[0]
+    with tab6:
+        st.subheader("Impostazioni Generali")
+
+        current_name = c.execute("SELECT value FROM state WHERE key = 'nome_competizione'").fetchone()
+        default_name = current_name[0] if current_name else ""
+
+        nome_competizione = st.text_input("Nome competizione", value=default_name)
+
+        if st.button("Salva nome competizione"):
+            c.execute("REPLACE INTO state (key, value) VALUES (?, ?)", ("nome_competizione", nome_competizione))
+            conn.commit()
+            st.success("Nome competizione aggiornato.")
+
     conn.close()
