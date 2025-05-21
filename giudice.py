@@ -34,7 +34,7 @@ def show_giudice():
     # Trova tutti gli attrezzi assegnati al giudice
     attrezzi_giudice = c.execute("""
         SELECT DISTINCT apparatus FROM judges
-        WHERE surname = LOWER(?) AND code = ?
+        WHERE LOWER(surname) = ? AND code = ?
     """, (cognome, codice)).fetchall()
 
     attrezzi_lista = [row[0] for row in attrezzi_giudice]
