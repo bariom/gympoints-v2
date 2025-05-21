@@ -1,5 +1,5 @@
 import streamlit as st
-import pandas
+import pandas as pd
 from db import get_connection
 
 def show_giudice():
