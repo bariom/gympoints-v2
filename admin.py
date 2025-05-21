@@ -226,7 +226,7 @@ def show_admin():
                         judge = st.selectbox("Giudice", judges, format_func=lambda x: x[1], key=f"judge_{rotation_id}")
                         score = st.number_input("Punteggio", min_value=0.0, max_value=20.0, step=0.05, key=f"score_{rotation_id}")
 
-                        if st.form_submit_button("Registra punteggio", key=f"submit_{rotation_id}"):
+                        if st.form_submit_button("Registra punteggio"):
                             existing = c.execute("""
                                 SELECT 1 FROM scores
                                 WHERE apparatus = ? AND athlete_id = ? AND judge_id = ?
