@@ -97,7 +97,7 @@ def show_live():
     # Se attivo, mostra classifica a lato
     if show_ranking_active:
         with col4:
-            st.markdown("<h4 style='text-align: center;'>Classifica</h4>", unsafe_allow_html=True)
+            st.markdown("<h4 style='text-align: center;'>Classifica provvisoria</h4>", unsafe_allow_html=True)
 
             classifica = c.execute("""
                 SELECT 
