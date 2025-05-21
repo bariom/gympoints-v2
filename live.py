@@ -79,7 +79,48 @@ def show_live():
         tutti_attrezzi_completati = False
         atleta_id, nome = atleti[index]
 
-        # HTML comune a intestazione e nome
+        # Punteggio o messaggio d’attesa
+        scores = c.execute("""
+            SELECT score FROM scores 
+            WHERE athlete_id = ? AND apparatus = ?
+        """, (atleta_id, attrezzo)).fetchall()
+
+        inner_html = ""
+        if len(scores) == 2:
+            media = round(sum(s[0] for s in scores) / 2, 3)
+            timer_key = f"{attrezzo}_{atleta_id}_{rotazione_corrente}"
+            shown_at = st.session_state["score_timers"].get(timer_key)
+
+            if shown_at is None:
+                st.session_state["score_timers"][timer_key] = now
+                shown_at = now
+
+            if now - shown_at < 20:
+                inner_html = f"""
+                <div style='
+                    margin-top: 8px;
+                    display: inline-block;
+                    background-color: #ffffff;
+                    border: 2px solid #00cc99;
+                    border-radius: 6px;
+                    padding: 6px 16px;
+                    font-size: 26px;
+                    font-weight: bold;
+                    color: #009977;
+                '>
+                    {media:.3f}
+                </div>
+                """
+            else:
+                st.session_state["progresso_live"][key_prog] = index + 1
+        else:
+            inner_html = """
+            <div style='font-size:14px; color:#ff9933; margin-top: 6px;'>
+                ⏳ In attesa del punteggio di entrambi i giudici
+            </div>
+            """
+
+        # Blocca completo: attrezzo + atleta + punteggio/messaggio
         html = f"""
         <div style="
             background-color: #f8f9fc;
@@ -92,54 +133,10 @@ def show_live():
                 {attrezzo.upper()}
             </div>
             <div style='font-size:18px; font-weight:600; color:#111;'>{nome}</div>
+            {inner_html}
+        </div>
         """
-
         col.markdown(html, unsafe_allow_html=True)
-
-        # Recupera e mostra punteggi
-        scores = c.execute("""
-            SELECT score FROM scores 
-            WHERE athlete_id = ? AND apparatus = ?
-        """, (atleta_id, attrezzo)).fetchall()
-
-        if len(scores) == 2:
-            media = round(sum(s[0] for s in scores) / 2, 3)
-            timer_key = f"{attrezzo}_{atleta_id}_{rotazione_corrente}"
-            shown_at = st.session_state["score_timers"].get(timer_key)
-
-            if shown_at is None:
-                st.session_state["score_timers"][timer_key] = now
-                shown_at = now
-
-            if now - shown_at < 20:
-                col.markdown(f"""
-                <div style="
-                    background-color: #ffffff;
-                    border: 2px solid #00cc99;
-                    border-radius: 6px;
-                    padding: 6px 16px;
-                    margin-top: 10px;
-                    margin-left: auto;
-                    margin-right: auto;
-                    width: fit-content;
-                    font-size: 26px;
-                    font-weight: bold;
-                    color: #009977;
-                ">
-                    {media:.3f}
-                </div>
-                </div> <!-- chiude box -->
-                """, unsafe_allow_html=True)
-            else:
-                st.session_state["progresso_live"][key_prog] = index + 1
-                col.markdown("</div>", unsafe_allow_html=True)
-        else:
-            col.markdown(f"""
-            <div style='font-size:14px; color:#ff9933; margin-top: 6px;'>
-                ⏳ In attesa del punteggio di entrambi i giudici
-            </div>
-            </div> <!-- chiude box -->
-            """, unsafe_allow_html=True)
 
     if tutti_attrezzi_completati:
         st.markdown("""
