@@ -83,9 +83,15 @@ def show_live():
 
             if shown_at is None:
                 st.session_state["score_timers"][timer_key] = now
-                col.success(f"{media:.3f}")
+                col.markdown(
+                    f"<div style='text-align: center; font-size: 28px; font-weight: bold; color: #009966;'>{media:.3f}</div>",
+                    unsafe_allow_html=True
+                )
             elif now - shown_at < 20:
-                col.success(f"{media:.3f}")
+                col.markdown(
+                    f"<div style='text-align: center; font-size: 28px; font-weight: bold; color: #009966;'>{media:.3f}</div>",
+                    unsafe_allow_html=True
+                )
             else:
                 st.session_state["progresso_live"][key_prog] = index + 1
         else:
