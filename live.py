@@ -11,7 +11,7 @@ def show_live():
 
     rotazione_corrente = int(c.execute("SELECT value FROM state WHERE key = 'rotazione_corrente'").fetchone()[0])
 
-    st.markdown(f"<h1 style='text-align: center; font-size: 36px; font-weight: 700; margin-bottom: 12px;'>Rotazione {rotazione_corrente}</h1>", unsafe_allow_html=True)
+    st.markdown(f"<h1 style='text-align: center; font-size: 36px; font-weight: 700; margin-bottom: 8px;'>Rotazione {rotazione_corrente}</h1>", unsafe_allow_html=True)
 
     attrezzi = ["Suolo", "Cavallo a maniglie", "Anelli", "Volteggio", "Parallele", "Sbarra"]
     col1, col2, col3 = st.columns(3)
@@ -32,9 +32,9 @@ def show_live():
         col.markdown(f"""
         <div style="
             background-color: #003366;
-            border-radius: 12px;
+            border-radius: 10px;
             padding: 6px 12px;
-            margin-bottom: 6px;
+            margin-bottom: 2px;
             text-align: center;
             color: white;
             font-size: 18px;
@@ -44,7 +44,15 @@ def show_live():
         </div>
         """, unsafe_allow_html=True)
 
-        col.markdown("<div style='min-height: 180px;'>", unsafe_allow_html=True)
+        col.markdown("""
+        <div style='
+            min-height: 180px;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            gap: 6px;
+        '>
+        """, unsafe_allow_html=True)
 
         atleti = c.execute("""
             SELECT a.id, a.name || ' ' || a.surname AS nome
@@ -71,7 +79,7 @@ def show_live():
         atleta_id, nome = atleti[index]
 
         col.markdown(f"""
-        <div style='text-align:center; font-size:18px; font-weight:600; color:#111; margin-bottom:4px;'>
+        <div style='text-align:center; font-size:18px; font-weight:600; color:#111;'>
             {nome}
         </div>
         """, unsafe_allow_html=True)
@@ -97,10 +105,9 @@ def show_live():
                     border-radius: 8px;
                     padding: 10px;
                     text-align: center;
-                    font-size: 28px;
+                    font-size: 26px;
                     font-weight: bold;
                     color: #009977;
-                    margin-bottom: 6px;
                 ">
                     {media:.3f}
                 </div>
