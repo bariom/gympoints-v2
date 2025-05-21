@@ -44,19 +44,18 @@ def show_live():
         </div>
         """, unsafe_allow_html=True)
 
-        # Contenitore compatto con padding e background chiaro
+        # Contenitore compatto e tutto incluso
         col.markdown("""
         <div style='
             background-color: #f8f9fc;
             border-radius: 8px;
-            padding: 8px 12px 12px 12px;
-            margin-bottom: 8px;
+            padding: 6px 12px 10px 12px;
+            margin-top: 0;
             min-height: 140px;
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: flex-start;
-            gap: 6px;
+            justify-content: start;
         '>
         """, unsafe_allow_html=True)
 
