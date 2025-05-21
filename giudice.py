@@ -36,9 +36,7 @@ def show_giudice():
         SELECT DISTINCT apparatus FROM judges
         WHERE LOWER(surname) = LOWER(?) AND code = ?
     """, (cognome, codice)).fetchall()
-    st.write("Cognome ricevuto:", cognome)
-    st.write("Codice ricevuto:", codice)
-    st.write("Attrezzi giudice trovati:", attrezzi_giudice)
+
 
     attrezzi_lista = [row[0] for row in attrezzi_giudice]
     selected_attrezzo = st.selectbox(
