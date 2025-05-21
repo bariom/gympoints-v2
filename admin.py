@@ -278,14 +278,21 @@ def show_admin():
     with tab6:
         st.subheader("Impostazioni Generali")
 
+        # Nome competizione
         current_name = c.execute("SELECT value FROM state WHERE key = 'nome_competizione'").fetchone()
         default_name = current_name[0] if current_name else ""
-
         nome_competizione = st.text_input("Nome competizione", value=default_name)
 
-        if st.button("Salva nome competizione"):
+        # Mostra classifica nel live
+        show_ranking_live = c.execute("SELECT value FROM state WHERE key = 'show_ranking_live'").fetchone()
+        show_ranking_default = show_ranking_live[0] == "1" if show_ranking_live else False
+        show_ranking_toggle = st.toggle("Mostra classifica nel Live", value=show_ranking_default)
+
+        if st.button("Salva impostazioni"):
             c.execute("REPLACE INTO state (key, value) VALUES (?, ?)", ("nome_competizione", nome_competizione))
+            c.execute("REPLACE INTO state (key, value) VALUES (?, ?)",
+                      ("show_ranking_live", "1" if show_ranking_toggle else "0"))
             conn.commit()
-            st.success("Nome competizione aggiornato.")
+            st.success("Impostazioni aggiornate.")
 
     conn.close()
