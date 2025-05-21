@@ -52,6 +52,10 @@ CREATE TABLE IF NOT EXISTS state (
 )
 """)
 
+c.execute("""INSERT OR REPLACE INTO state (key, value) VALUES ('rotazione_corrente', '1'
+)
+""")
+
 conn.commit()
 conn.close()
 print("Database creato con successo.")
