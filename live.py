@@ -79,7 +79,7 @@ def show_live():
         tutti_attrezzi_completati = False
         atleta_id, nome = atleti[index]
 
-        # Punteggio o messaggio d’attesa
+        # Punteggio o messaggio
         scores = c.execute("""
             SELECT score FROM scores 
             WHERE athlete_id = ? AND apparatus = ?
@@ -97,7 +97,7 @@ def show_live():
 
             if now - shown_at < 20:
                 inner_html = f"""
-                <div style='
+                <div style="
                     margin-top: 8px;
                     display: inline-block;
                     background-color: #ffffff;
@@ -107,7 +107,7 @@ def show_live():
                     font-size: 26px;
                     font-weight: bold;
                     color: #009977;
-                '>
+                ">
                     {media:.3f}
                 </div>
                 """
@@ -115,12 +115,12 @@ def show_live():
                 st.session_state["progresso_live"][key_prog] = index + 1
         else:
             inner_html = """
-            <div style='font-size:14px; color:#ff9933; margin-top: 6px;'>
+            <div style="font-size:14px; color:#ff9933; margin-top: 6px;">
                 ⏳ In attesa del punteggio di entrambi i giudici
             </div>
             """
 
-        # Blocca completo: attrezzo + atleta + punteggio/messaggio
+        # Blocco completo HTML
         html = f"""
         <div style="
             background-color: #f8f9fc;
@@ -132,7 +132,7 @@ def show_live():
             <div style="background-color: #003366; color: white; font-size: 18px; font-weight: bold; border-radius: 6px; padding: 6px 12px; margin-bottom: 8px;">
                 {attrezzo.upper()}
             </div>
-            <div style='font-size:18px; font-weight:600; color:#111;'>{nome}</div>
+            <div style="font-size:18px; font-weight:600; color:#111;">{nome}</div>
             {inner_html}
         </div>
         """
@@ -140,11 +140,10 @@ def show_live():
 
     if tutti_attrezzi_completati:
         st.markdown("""
-        <div style='text-align:center; font-size:18px; color:#00cc99; margin-top: 20px;'>
+        <div style="text-align:center; font-size:18px; color:#00cc99; margin-top: 20px;">
             Tutti gli attrezzi hanno completato la rotazione.<br>
             Attendere l'avanzamento alla prossima rotazione.
         </div>
         """, unsafe_allow_html=True)
 
     conn.close()
-#
