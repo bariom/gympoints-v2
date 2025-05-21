@@ -114,27 +114,31 @@ def show_admin():
     with tab4:
         st.subheader("Inserimento Punteggi")
 
-        # Ottieni rotazioni disponibili
+        # Recupera la rotazione corrente
+        rotazione_corrente = st.session_state.get("rotazione_corrente", 1)
+
+        # Ottieni le rotazioni disponibili per la rotazione corrente
         rotations = c.execute("""
-            SELECT r.id, a.name || ' ' || a.surname || ' - ' || r.apparatus 
-            FROM rotations r 
-            JOIN athletes a ON a.id = r.athlete_id 
-            ORDER BY r.rotation_order
-        """).fetchall()
+            SELECT r.id, a.name || ' ' || a.surname || ' - ' || r.apparatus
+            FROM rotations r
+            JOIN athletes a ON a.id = r.athlete_id
+            WHERE r.rotation_order = ?
+            ORDER BY r.apparatus
+        """, (rotazione_corrente,)).fetchall()
 
         if not rotations:
-            st.info("Nessuna rotazione disponibile.")
+            st.info("Nessuna rotazione disponibile per la rotazione corrente.")
         else:
             with st.form("add_score"):
                 rotation = st.selectbox("Rotazione", rotations, format_func=lambda x: x[1])
-                # Recupera attrezzo dalla rotazione selezionata
+                # Recupera attrezzo e atleta dalla rotazione selezionata
                 app = c.execute("SELECT apparatus, athlete_id FROM rotations WHERE id = ?", (rotation[0],)).fetchone()
                 apparatus, athlete_id = app
 
                 # Seleziona solo giudici per quell'attrezzo
                 judges = c.execute("""
-                    SELECT id, name || ' ' || surname || ' (' || apparatus || ')' 
-                    FROM judges 
+                    SELECT id, name || ' ' || surname || ' (' || apparatus || ')'
+                    FROM judges
                     WHERE apparatus = ?
                 """, (apparatus,)).fetchall()
 
@@ -146,7 +150,7 @@ def show_admin():
                     if st.form_submit_button("Registra punteggio"):
                         # Verifica se esiste già un punteggio inserito dallo stesso giudice
                         existing = c.execute("""
-                            SELECT 1 FROM scores 
+                            SELECT 1 FROM scores
                             WHERE apparatus = ? AND athlete_id = ? AND judge_id = ?
                         """, (apparatus, athlete_id, judge[0])).fetchone()
 
@@ -155,14 +159,13 @@ def show_admin():
                                 "Questo giudice ha già inserito un punteggio per questo atleta su questo attrezzo.")
                         else:
                             c.execute("""
-                                INSERT INTO scores (apparatus, athlete_id, judge_id, score) 
+                                INSERT INTO scores (apparatus, athlete_id, judge_id, score)
                                 VALUES (?, ?, ?, ?)
                             """, (apparatus, athlete_id, judge[0], score))
                             conn.commit()
                             st.success("Punteggio registrato correttamente")
 
         st.dataframe(c.execute("SELECT * FROM scores").fetchall(), use_container_width=True)
-
 
     tab5 = st.tabs(["Stato Gara"])[0]
     with tab5:
