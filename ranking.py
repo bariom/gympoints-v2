@@ -1,7 +1,7 @@
 
 import streamlit as st
-import sqlite3
 import pandas as pd
+from db import get_connection
 from streamlit_autorefresh import st_autorefresh
 
 def show_ranking():
@@ -10,7 +10,7 @@ def show_ranking():
     if "ranking_page" not in st.session_state:
         st.session_state["ranking_page"] = 0
 
-    conn = sqlite3.connect("data.db")
+    conn = get_connection()
     c = conn.cursor()
 
     query = """
