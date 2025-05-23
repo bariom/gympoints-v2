@@ -73,11 +73,13 @@ def show_ranking():
         score = round(score, 3)
 
         if use_olympic_logic:
-            if score != prev_score:
+            if prev_score is None or score != prev_score:
                 shown_rank = pos
         else:
-            if score != prev_score:
-                shown_rank = shown_rank + 1 if i > 0 else 1
+            if prev_score is None:
+                shown_rank = 1
+            elif score != prev_score:
+                shown_rank += 1
 
         bg = "#FFD700" if shown_rank == 1 else "#C0C0C0" if shown_rank == 2 else "#CD7F32" if shown_rank == 3 else ("#f0f8ff" if i % 2 == 0 else "#ffffff")
 
