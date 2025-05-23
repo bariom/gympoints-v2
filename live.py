@@ -10,7 +10,11 @@ def show_live():
     conn = get_connection()
     c = conn.cursor()
 
+    # Recupera impostazioni
     rotazione_corrente = int(c.execute("SELECT value FROM state WHERE key = 'rotazione_corrente'").fetchone()[0])
+    row = c.execute("SELECT value FROM state WHERE key = 'show_ranking_live'").fetchone()
+    show_ranking_active = row and row[0] == "1"
+
     st.markdown(f"<h2 style='text-align: center; margin-bottom: 5px;'>Rotazione {rotazione_corrente}</h2>", unsafe_allow_html=True)
 
     attrezzi = ["Suolo", "Cavallo a maniglie", "Anelli", "Volteggio", "Parallele", "Sbarra"]
@@ -73,37 +77,25 @@ def show_live():
             col.warning("⏳ In attesa del punteggio")
 
     if tutti_attrezzi_completati:
-        st.info("In attesa della prossima rotazione.")
-
-
-    if tutti_attrezzi_completati:
         st.info("Tutti gli attrezzi hanno completato la rotazione. Attendere l'avanzamento manuale.")
 
-    # Se attivo, mostra classifica a lato
+    # Classifica a lato
     if show_ranking_active:
-        with col4:
-            st.markdown("<h4 style='text-align: center;'>Classifica provvisoria</h4>", unsafe_allow_html=True)
+        st.markdown("<hr>", unsafe_allow_html=True)
+        st.markdown("<h4 style='text-align: center;'>Classifica provvisoria</h4>", unsafe_allow_html=True)
 
-            classifica = c.execute("""
-                SELECT 
-                    a.name || ' ' || a.surname AS Atleta,
-                    SUM(avg_score) AS Totale
-                FROM (
-                    SELECT 
-                        s.apparatus,
-                        s.athlete_id,
-                        AVG(s.score) AS avg_score
-                    FROM scores s
-                    GROUP BY s.apparatus, s.athlete_id
-                    HAVING COUNT(*) = 2
-                ) AS sub
-                JOIN athletes a ON a.id = sub.athlete_id
-                GROUP BY sub.athlete_id
-                ORDER BY Totale DESC
-                LIMIT 10
-            """).fetchall()
+        classifica = c.execute("""
+            SELECT 
+                a.name || ' ' || a.surname AS Atleta,
+                SUM(s.score) AS Totale
+            FROM scores s
+            JOIN athletes a ON a.id = s.athlete_id
+            GROUP BY s.athlete_id
+            ORDER BY Totale DESC
+            LIMIT 10
+        """).fetchall()
 
-            for i, row in enumerate(classifica, start=1):
-                st.markdown(f"<div style='font-size:18px;'>{i}. {row[0]} — <b>{row[1]:.3f}</b></div>", unsafe_allow_html=True)
+        for i, row in enumerate(classifica, start=1):
+            st.markdown(f"<div style='font-size:18px;'>{i}. {row[0]} — <b>{row[1]:.3f}</b></div>", unsafe_allow_html=True)
 
     conn.close()
