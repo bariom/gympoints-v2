@@ -20,7 +20,6 @@ def show_live():
     show_ranking_live = c.execute("SELECT value FROM state WHERE key = 'show_ranking_live'").fetchone()
     show_ranking_active = show_ranking_live and show_ranking_live[0] == "1"
 
-    st.markdown(f"<h2 style='text-align: center; margin-bottom: 5px;'>Rotazione {rotazione_corrente}</h2>", unsafe_allow_html=True)
 
     if show_ranking_active:
         col_attrezzi, col_classifica = st.columns([2, 1])
