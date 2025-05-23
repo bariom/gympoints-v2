@@ -92,7 +92,7 @@ def show_admin():
             qr_img.save(buf)
             buf.seek(0)
             st.markdown(f"#### {name} {surname} - Codice: {code}")
-            st.image(buf, caption=full_url, use_column_width=False)
+            st.image(buf, caption=full_url, use_container_width=True)
 
     with tab3:
         st.subheader("Gestione Rotazioni")
