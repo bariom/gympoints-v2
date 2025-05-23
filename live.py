@@ -1,26 +1,34 @@
-
 import time
 import streamlit as st
 from db import get_connection
 from streamlit_autorefresh import st_autorefresh
 
 def show_live():
-    st_autorefresh(interval=2000, key="refresh_live")
+    st_autorefresh(interval=5000, key="refresh_live")
 
     conn = get_connection()
     c = conn.cursor()
 
-    rotazione_corrente = int(c.execute("SELECT value FROM state WHERE key = 'rotazione_corrente'").fetchone()[0])
+    # Nome competizione
     nome_comp = c.execute("SELECT value FROM state WHERE key = 'nome_competizione'").fetchone()
-    show_ranking_live = c.execute("SELECT value FROM state WHERE key = 'show_ranking_live'").fetchone()
-    show_ranking_active = show_ranking_live and show_ranking_live[0] == "1"
-
     if nome_comp:
         st.markdown(f"<h2 style='text-align: center; margin-bottom: 5px;'>{nome_comp[0]}</h2>", unsafe_allow_html=True)
 
-    st.markdown(f"<h3 style='text-align: center; margin-bottom: 5px;'>Rotazione {rotazione_corrente}</h3>", unsafe_allow_html=True)
+    # Rotazione corrente
+    rotazione_corrente = int(c.execute("SELECT value FROM state WHERE key = 'rotazione_corrente'").fetchone()[0])
+    st.markdown(f"<h4 style='text-align: center; margin-top: 0;'>Rotazione {rotazione_corrente}</h4>", unsafe_allow_html=True)
+
+    # Switch per mostrare classifica provvisoria
+    show_ranking_live = c.execute("SELECT value FROM state WHERE key = 'show_ranking_live'").fetchone()
+    show_ranking_active = show_ranking_live and show_ranking_live[0] == "1"
+
+    # Switch logica classifica
+    logica_olimpica = c.execute("SELECT value FROM state WHERE key = 'ranking_logic'").fetchone()
+    usa_logica_olimpica = not logica_olimpica or logica_olimpica[0] == "olimpica"
 
     attrezzi = ["Suolo", "Cavallo a maniglie", "Anelli", "Volteggio", "Parallele", "Sbarra"]
+    col1, col2, col3 = st.columns([1, 1, 1]) if not show_ranking_active else st.columns([1, 1, 1, 1])
+    col_map = [col1, col2, col3, col1, col2, col3]
 
     now = time.time()
     if "progresso_live" not in st.session_state:
@@ -29,13 +37,6 @@ def show_live():
         st.session_state["score_timers"] = {}
 
     tutti_attrezzi_completati = True
-
-    if show_ranking_active:
-        col1, col2, col3, col4 = st.columns([1, 1, 1, 1.2])
-        col_map = [col1, col2, col3, col1, col2, col3]
-    else:
-        col1, col2, col3 = st.columns(3)
-        col_map = [col1, col2, col3, col1, col2, col3]
 
     for i, attrezzo in enumerate(attrezzi):
         col = col_map[i]
@@ -76,8 +77,7 @@ def show_live():
 
             if shown_at is None:
                 st.session_state["score_timers"][timer_key] = now
-                col.markdown(f"<div style='text-align: center; font-size: 28px; font-weight: bold; color: #009966;'>{punteggio:.3f}</div>", unsafe_allow_html=True)
-            elif now - shown_at < 20:
+            if now - st.session_state["score_timers"][timer_key] < 20:
                 col.markdown(f"<div style='text-align: center; font-size: 28px; font-weight: bold; color: #009966;'>{punteggio:.3f}</div>", unsafe_allow_html=True)
             else:
                 st.session_state["progresso_live"][key_prog] = index + 1
@@ -87,28 +87,41 @@ def show_live():
     if tutti_attrezzi_completati:
         st.info("Tutti gli attrezzi hanno completato la rotazione. Attendere l'avanzamento manuale.")
 
+    # Mostra classifica provvisoria
     if show_ranking_active:
-        with col4:
-            st.markdown("<h4 style='text-align: center;'>Classifica provvisoria</h4>", unsafe_allow_html=True)
+        col_classifica = col_map[-1]
+        col_classifica.markdown("<h4 style='text-align: center;'>Classifica provvisoria</h4>", unsafe_allow_html=True)
 
-            classifica = c.execute("""
-                SELECT 
-                    a.name || ' ' || a.surname AS Atleta,
-                    a.club,
-                    SUM(s.score) AS Totale
-                FROM scores s
-                JOIN athletes a ON a.id = s.athlete_id
-                GROUP BY s.athlete_id
-                ORDER BY Totale DESC
-                LIMIT 20
-            """).fetchall()
+        # Query classifica
+        classifica = c.execute("""
+            SELECT 
+                a.name || ' ' || a.surname AS nome,
+                a.club AS club,
+                SUM(s.score) AS totale
+            FROM scores s
+            JOIN athletes a ON a.id = s.athlete_id
+            GROUP BY s.athlete_id
+            ORDER BY totale DESC
+        """).fetchall()
 
-            col_a, col_b = st.columns(2)
-            for i, (nome, club, totale) in enumerate(classifica):
-                colonna = col_a if i < 10 else col_b
-                colonna.markdown(
-                    f"<div style='font-size:16px; margin-bottom: 8px;'><b>{i+1}. {nome} — {totale:.3f}</b><br><span style='font-size:14px;'><i>{club}</i></span></div>",
-                    unsafe_allow_html=True
-                )
+        posizione = 1
+        posizione_effettiva = 1
+        punteggio_precedente = None
+
+        for i, (nome, club, totale) in enumerate(classifica[:20], start=1):
+            if punteggio_precedente is not None:
+                if totale == punteggio_precedente:
+                    pass  # stessa posizione
+                else:
+                    if usa_logica_olimpica:
+                        posizione_effettiva = posizione
+                    else:
+                        posizione_effettiva += 1
+            col_classifica.markdown(
+                f"<div style='font-size:16px;'>{posizione_effettiva}. <b>{nome} — {totale:.3f}</b><br/><i>{club}</i></div>",
+                unsafe_allow_html=True
+            )
+            punteggio_precedente = totale
+            posizione += 1
 
     conn.close()

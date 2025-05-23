@@ -13,6 +13,10 @@ def show_ranking():
     conn = get_connection()
     c = conn.cursor()
 
+    # Controlla logica classifica
+    logic_row = c.execute("SELECT value FROM state WHERE key = 'ranking_logic'").fetchone()
+    use_olympic_logic = logic_row is None or logic_row[0] == "olimpica"
+
     query = """
     SELECT 
         a.name || ' ' || a.surname AS Atleta,
@@ -31,11 +35,17 @@ def show_ranking():
         conn.close()
         return
 
+    # Titolo competizione
+    nome = c.execute("SELECT value FROM state WHERE key = 'nome_competizione'").fetchone()
     conn.close()
 
     if not results:
         st.warning("Nessun punteggio disponibile per la classifica.")
         return
+
+    if nome:
+        st.markdown(f"<h2 style='text-align: center;'>{nome[0]}</h2>", unsafe_allow_html=True)
+    st.markdown("<h3 style='text-align: center;'>Classifica Generale - All Around</h3>", unsafe_allow_html=True)
 
     per_page = 15
     total_pages = (len(results) - 1) // per_page + 1
@@ -44,21 +54,6 @@ def show_ranking():
     end = start + per_page
     display_data = results[start:end]
 
-    # Titolo competizione
-    nome = None
-    conn = get_connection()
-    c = conn.cursor()
-    try:
-        nome = c.execute("SELECT value FROM state WHERE key = 'nome_competizione'").fetchone()
-    finally:
-        conn.close()
-
-    if nome:
-        st.markdown(f"<h2 style='text-align: center;'>{nome[0]}</h2>", unsafe_allow_html=True)
-
-    st.markdown("<h3 style='text-align: center;'>Classifica Generale - All Around</h3>", unsafe_allow_html=True)
-
-    # Costruzione tabella HTML
     html = """<table style='width: 90%; margin: auto; border-collapse: collapse; font-size: 22px;'>
         <thead>
             <tr style='background-color: #003366; color: white; text-align: center;'>
@@ -71,27 +66,45 @@ def show_ranking():
         <tbody>
     """
 
+    posizione = 1
+    posizione_effettiva = 1
+    punteggio_precedente = None
+
     for i, row in enumerate(display_data, start=start + 1):
-        if i == 1:
+        nome, club, totale = row
+        if punteggio_precedente is not None:
+            if totale == punteggio_precedente:
+                pass  # posizione effettiva resta invariata
+            else:
+                if use_olympic_logic:
+                    posizione_effettiva = posizione
+                else:
+                    posizione_effettiva += 1
+        else:
+            posizione_effettiva = 1
+
+        if posizione_effettiva == 1:
             bg = "#FFD700"
-        elif i == 2:
+        elif posizione_effettiva == 2:
             bg = "#C0C0C0"
-        elif i == 3:
+        elif posizione_effettiva == 3:
             bg = "#CD7F32"
         else:
             bg = "#f0f8ff" if i % 2 == 0 else "#ffffff"
 
         html += f"""
         <tr style='text-align: center; background-color: {bg};'>
-            <td style='padding: 6px; font-weight: bold;'>{i}</td>
-            <td style='padding: 6px;'>{row[0]}</td>
-            <td style='padding: 6px;'>{row[1]}</td>
-            <td style='padding: 6px; font-weight: bold; color: #006600;'>{row[2]:.3f}</td>
+            <td style='padding: 6px; font-weight: bold;'>{posizione_effettiva}</td>
+            <td style='padding: 6px;'>{nome}</td>
+            <td style='padding: 6px;'>{club}</td>
+            <td style='padding: 6px; font-weight: bold; color: #006600;'>{totale:.3f}</td>
         </tr>
         """
+
+        punteggio_precedente = totale
+        posizione += 1
 
     html += "</tbody></table>"
     st.components.v1.html(html, height=700, scrolling=True)
 
-    # Pagina successiva
     st.session_state["ranking_page"] = (current_page + 1) % total_pages

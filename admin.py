@@ -291,6 +291,26 @@ def show_admin():
             st.session_state["score_timers"] = {}
             st.success(f"Rotazione impostata a {current_rotation}")
 
+        st.markdown("---")
+        st.subheader("Logica di Classifica")
+
+        # Recupera valore attuale
+        current_logic = c.execute("SELECT value FROM state WHERE key = 'logica_classifica'").fetchone()
+        current_logic = current_logic[0] if current_logic else "incrementale"
+
+        logic_option = st.radio(
+            "Scegli la logica di assegnazione delle posizioni:",
+            ["incrementale", "olimpica"],
+            index=0 if current_logic == "incrementale" else 1,
+            horizontal=True,
+            key="logica_classifica"
+        )
+
+        if st.button("Salva logica classifica"):
+            c.execute("REPLACE INTO state (key, value) VALUES (?, ?)", ("logica_classifica", logic_option))
+            conn.commit()
+            st.success(f"Logica classifica impostata su: {logic_option}")
+
     tab6 = st.tabs(["Impostazioni"])[0]
     with tab6:
         st.subheader("Impostazioni Generali")
