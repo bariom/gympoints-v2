@@ -1,11 +1,11 @@
-
 import streamlit as st
-import pandas as pd
+import sqlite3
 from db import get_connection
 from streamlit_autorefresh import st_autorefresh
 
 def show_ranking():
-    st_autorefresh(interval=10000, key="auto_refresh")
+    # Auto-refresh ogni 10 secondi
+    st_autorefresh(interval=10_000, key="auto_refresh")
 
     if "ranking_page" not in st.session_state:
         st.session_state["ranking_page"] = 0
@@ -44,13 +44,22 @@ def show_ranking():
     end = start + per_page
     display_data = results[start:end]
 
-    st.markdown(
-        "<h2 style='text-align: center;'>Classifica Generale - All Around</h2>",
-        unsafe_allow_html=True
-    )
+    # Titolo competizione
+    nome = None
+    conn = get_connection()
+    c = conn.cursor()
+    try:
+        nome = c.execute("SELECT value FROM state WHERE key = 'nome_competizione'").fetchone()
+    finally:
+        conn.close()
 
-    html = """
-    <table style='width: 90%; margin: auto; border-collapse: collapse; font-size: 22px;'>
+    if nome:
+        st.markdown(f"<h2 style='text-align: center;'>{nome[0]}</h2>", unsafe_allow_html=True)
+
+    st.markdown("<h3 style='text-align: center;'>Classifica Generale - All Around</h3>", unsafe_allow_html=True)
+
+    # Costruzione tabella HTML
+    html = """<table style='width: 90%; margin: auto; border-collapse: collapse; font-size: 22px;'>
         <thead>
             <tr style='background-color: #003366; color: white; text-align: center;'>
                 <th style='padding: 8px;'>Posizione</th>
@@ -84,4 +93,5 @@ def show_ranking():
     html += "</tbody></table>"
     st.markdown(html, unsafe_allow_html=True)
 
+    # Pagina successiva
     st.session_state["ranking_page"] = (current_page + 1) % total_pages

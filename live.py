@@ -102,6 +102,6 @@ def show_live():
 
             for i, (nome, club, totale) in enumerate(classifica):
                 col = columns[i // 10]
-                col.markdown(f"<div style='font-size:16px;'>{i+1}. <b>{nome}</b><br/><i>{club}</i> — <b>{totale:.3f}</b></div>", unsafe_allow_html=True)
+                col.markdown(f"<div style='font-size:16px;'>{i+1}. <b>{nome} — </b><i>{club}</i> — <b>{totale:.3f}</b></div>", unsafe_allow_html=True)
 
     conn.close()
