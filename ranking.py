@@ -14,8 +14,8 @@ def show_ranking():
     c = conn.cursor()
 
     # Controlla logica classifica
-    logic_row = c.execute("SELECT value FROM state WHERE key = 'ranking_logic'").fetchone()
-    use_olympic_logic = logic_row is None or logic_row[0] == "olimpica"
+    logica_row = c.execute("SELECT value FROM state WHERE key = 'logica_classifica'").fetchone()
+    logica_classifica = logica_row[0] if logica_row else "olimpica"
 
     query = """
     SELECT 
