@@ -4,7 +4,6 @@ from db import get_connection
 from streamlit_autorefresh import st_autorefresh
 
 def show_ranking():
-    # Auto-refresh ogni 10 secondi
     st_autorefresh(interval=10_000, key="auto_refresh")
 
     if "ranking_page" not in st.session_state:
@@ -13,10 +12,16 @@ def show_ranking():
     conn = get_connection()
     c = conn.cursor()
 
-    # Controlla logica classifica
-    logica_row = c.execute("SELECT value FROM state WHERE key = 'logica_classifica'").fetchone()
-    logica_classifica = logica_row[0] if logica_row else "olimpica"
+    # Recupera logica classifica
+    logic_row = c.execute("SELECT value FROM state WHERE key = 'logica_classifica'").fetchone()
+    logic = logic_row[0] if logic_row else "olimpica"
+    use_olympic_logic = logic == "olimpica"
 
+    # Recupera nome competizione
+    nome = c.execute("SELECT value FROM state WHERE key = 'nome_competizione'").fetchone()
+    nome_competizione = nome[0] if nome else None
+
+    # Query classifica
     query = """
     SELECT 
         a.name || ' ' || a.surname AS Atleta,
@@ -35,17 +40,11 @@ def show_ranking():
         conn.close()
         return
 
-    # Titolo competizione
-    nome = c.execute("SELECT value FROM state WHERE key = 'nome_competizione'").fetchone()
     conn.close()
 
     if not results:
         st.warning("Nessun punteggio disponibile per la classifica.")
         return
-
-    if nome:
-        st.markdown(f"<h2 style='text-align: center;'>{nome[0]}</h2>", unsafe_allow_html=True)
-    st.markdown("<h3 style='text-align: center;'>Classifica Generale - All Around</h3>", unsafe_allow_html=True)
 
     per_page = 15
     total_pages = (len(results) - 1) // per_page + 1
@@ -53,6 +52,11 @@ def show_ranking():
     start = current_page * per_page
     end = start + per_page
     display_data = results[start:end]
+
+    if nome_competizione:
+        st.markdown(f"<h2 style='text-align: center;'>{nome_competizione}</h2>", unsafe_allow_html=True)
+
+    st.markdown("<h3 style='text-align: center;'>Classifica Generale - All Around</h3>", unsafe_allow_html=True)
 
     html = """<table style='width: 90%; margin: auto; border-collapse: collapse; font-size: 22px;'>
         <thead>
@@ -66,45 +70,39 @@ def show_ranking():
         <tbody>
     """
 
-    posizione = 1
-    posizione_effettiva = 1
-    punteggio_precedente = None
+    last_score = None
+    position = 0
 
-    for i, row in enumerate(display_data, start=start + 1):
+    for i, row in enumerate(display_data, start=1):
         nome, club, totale = row
-        if punteggio_precedente is not None:
-            if totale == punteggio_precedente:
-                pass  # posizione effettiva resta invariata
-            else:
-                if use_olympic_logic:
-                    posizione_effettiva = posizione
-                else:
-                    posizione_effettiva += 1
-        else:
-            posizione_effettiva = 1
+        bg = "#f0f8ff" if i % 2 == 0 else "#ffffff"
 
-        if posizione_effettiva == 1:
-            bg = "#FFD700"
-        elif posizione_effettiva == 2:
-            bg = "#C0C0C0"
-        elif posizione_effettiva == 3:
-            bg = "#CD7F32"
+        if use_olympic_logic:
+            if totale != last_score:
+                position = i
         else:
-            bg = "#f0f8ff" if i % 2 == 0 else "#ffffff"
+            position += 1
+
+        last_score = totale
+
+        if position == 1:
+            bg = "#FFD700"
+        elif position == 2:
+            bg = "#C0C0C0"
+        elif position == 3:
+            bg = "#CD7F32"
 
         html += f"""
         <tr style='text-align: center; background-color: {bg};'>
-            <td style='padding: 6px; font-weight: bold;'>{posizione_effettiva}</td>
+            <td style='padding: 6px; font-weight: bold;'>{position}</td>
             <td style='padding: 6px;'>{nome}</td>
             <td style='padding: 6px;'>{club}</td>
             <td style='padding: 6px; font-weight: bold; color: #006600;'>{totale:.3f}</td>
         </tr>
         """
 
-        punteggio_precedente = totale
-        posizione += 1
-
     html += "</tbody></table>"
     st.components.v1.html(html, height=700, scrolling=True)
 
+    # Prossima pagina
     st.session_state["ranking_page"] = (current_page + 1) % total_pages
