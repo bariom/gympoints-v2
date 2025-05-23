@@ -69,8 +69,12 @@ def show_giudice():
         FROM rotations r
         JOIN athletes a ON a.id = r.athlete_id
         WHERE r.apparatus = ? AND r.rotation_order = ?
+          AND r.athlete_id NOT IN (
+              SELECT athlete_id FROM scores
+              WHERE judge_id = ? AND apparatus = ?
+          )
         ORDER BY r.id
-    """, (selected_attrezzo, rotazione_corrente)).fetchall()
+    """, (selected_attrezzo, rotazione_corrente, giudice_id, selected_attrezzo)).fetchall()
 
     if not rotazioni:
         st.info("Nessun atleta in gara su questo attrezzo per la rotazione corrente.")
