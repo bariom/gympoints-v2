@@ -1,11 +1,11 @@
-#
+
 import time
 import streamlit as st
 from db import get_connection
 from streamlit_autorefresh import st_autorefresh
 
 def show_live():
-    st_autorefresh(interval=5000, key="refresh_live")
+    st_autorefresh(interval=2000, key="refresh_live")
 
     conn = get_connection()
     c = conn.cursor()
