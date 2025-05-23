@@ -1,8 +1,9 @@
-
 import time
 import streamlit as st
 from db import get_connection
 from streamlit_autorefresh import st_autorefresh
+
+st.set_page_config(layout="wide")
 
 def show_live():
     st_autorefresh(interval=2000, key="refresh_live")
@@ -16,7 +17,10 @@ def show_live():
 
     st.markdown(f"<h2 style='text-align: center; margin-bottom: 5px;'>Rotazione {rotazione_corrente}</h2>", unsafe_allow_html=True)
 
-    col_attrezzi, col_classifica = st.columns([2, 1])
+    if show_ranking_active:
+        col_attrezzi, col_classifica = st.columns([2, 1])
+    else:
+        col_attrezzi = st.container()
 
     attrezzi = ["Suolo", "Cavallo a maniglie", "Anelli", "Volteggio", "Parallele", "Sbarra"]
     col1, col2, col3 = col_attrezzi.columns(3)
@@ -57,10 +61,7 @@ def show_live():
         atleta_id, nome = atleti[index]
         col.markdown(f"<div style='text-align: center; font-size: 20px; margin-top: 10px;'><b>{nome}</b></div>", unsafe_allow_html=True)
 
-        score_row = c.execute("""
-            SELECT score FROM scores 
-            WHERE athlete_id = ? AND apparatus = ?
-        """, (atleta_id, attrezzo)).fetchone()
+        score_row = c.execute("SELECT score FROM scores WHERE athlete_id = ? AND apparatus = ?", (atleta_id, attrezzo)).fetchone()
 
         if score_row:
             punteggio = round(score_row[0], 3)
@@ -87,23 +88,20 @@ def show_live():
             classifica = c.execute("""
                 SELECT 
                     a.name || ' ' || a.surname AS Atleta,
-                    a.club,
+                    a.club AS Società,
                     SUM(score) AS Totale
                 FROM scores s
                 JOIN athletes a ON a.id = s.athlete_id
-                GROUP BY s.athlete_id
+                GROUP BY a.id
                 ORDER BY Totale DESC
                 LIMIT 30
             """).fetchall()
 
-            left, mid, right = st.columns(3)
-            for i, row in enumerate(classifica, start=1):
-                block = f"<b>{i}. {row[0]}</b><br><i>{row[1]}</i> — <b>{row[2]:.3f}</b><br><br>"
-                if i <= 10:
-                    left.markdown(block, unsafe_allow_html=True)
-                elif i <= 20:
-                    mid.markdown(block, unsafe_allow_html=True)
-                else:
-                    right.markdown(block, unsafe_allow_html=True)
+            left_col, mid_col, right_col = st.columns(3)
+            columns = [left_col, mid_col, right_col]
+
+            for i, (nome, club, totale) in enumerate(classifica):
+                col = columns[i // 10]
+                col.markdown(f"<div style='font-size:16px;'>{i+1}. <b>{nome}</b><br/><i>{club}</i> — <b>{totale:.3f}</b></div>", unsafe_allow_html=True)
 
     conn.close()
