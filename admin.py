@@ -98,7 +98,6 @@ def show_admin():
         st.subheader("Gestione Rotazioni")
         attrezzi = ["Suolo", "Cavallo a maniglie", "Anelli", "Volteggio", "Parallele", "Sbarra"]
 
-        # Elenco atleti
         athletes = c.execute("SELECT id, name || ' ' || surname || ' (' || club || ')' FROM athletes").fetchall()
 
         st.markdown("### Aggiungi nuova rotazione")
@@ -176,9 +175,19 @@ def show_admin():
                 """, (att,)).fetchall()
                 nomi_gruppi.append([x[0] for x in atleti_per_attrezzo])
 
-            # Ora ruota i gruppi tra attrezzi (non dentro gli attrezzi)
+            # Ruota i gruppi tra attrezzi, E ruota la lista interna degli atleti a sinistra a ogni rotazione
             for rot in range(2, 7):
-                nomi_gruppi = nomi_gruppi[-1:] + nomi_gruppi[:-1]  # ruota a destra
+                # Ruota atleti dentro ogni gruppo (olimpica tra atleti)
+                nomi_gruppo_ruotati = []
+                for gruppo in nomi_gruppi:
+                    if gruppo:
+                        gruppo_rotato = gruppo[1:] + gruppo[:1]  # shift a sinistra
+                    else:
+                        gruppo_rotato = []
+                    nomi_gruppo_ruotati.append(gruppo_rotato)
+                # Ruota i gruppi tra attrezzi (olimpica tra attrezzi)
+                nomi_gruppi = nomi_gruppo_ruotati[-1:] + nomi_gruppo_ruotati[:-1]  # ruota gruppi a destra
+
                 st.markdown(f"#### Rotazione {rot}")
                 for att, gruppo in zip(attrezzi, nomi_gruppi):
                     st.markdown(f"**{att}**:")
@@ -190,7 +199,7 @@ def show_admin():
 
         # ---- Salva rotazioni olimpiche ----
         if st.button("✅ Genera e salva rotazioni 2–6"):
-            gruppi = []
+            # Recupera gruppi di atleti per ogni attrezzo in rotazione 1 (id!)
             ids_gruppi = []
             for att in attrezzi:
                 athlete_ids = c.execute("""
@@ -202,7 +211,17 @@ def show_admin():
                 ids_gruppi.append([x[0] for x in athlete_ids])
 
             for rot in range(2, 7):
-                ids_gruppi = ids_gruppi[-1:] + ids_gruppi[:-1]  # ruota a destra i gruppi
+                # Ruota atleti dentro ogni gruppo (olimpica tra atleti)
+                ids_gruppo_ruotati = []
+                for gruppo in ids_gruppi:
+                    if gruppo:
+                        gruppo_rotato = gruppo[1:] + gruppo[:1]  # shift a sinistra
+                    else:
+                        gruppo_rotato = []
+                    ids_gruppo_ruotati.append(gruppo_rotato)
+                # Ruota i gruppi tra attrezzi (olimpica tra attrezzi)
+                ids_gruppi = ids_gruppo_ruotati[-1:] + ids_gruppo_ruotati[:-1]  # ruota gruppi a destra
+
                 for att, gruppo in zip(attrezzi, ids_gruppi):
                     for athlete_id in gruppo:
                         c.execute("""
