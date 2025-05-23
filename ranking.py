@@ -1,6 +1,4 @@
-
 import streamlit as st
-import sqlite3
 from db import get_connection
 from streamlit_autorefresh import st_autorefresh
 
@@ -13,28 +11,29 @@ def show_ranking():
     conn = get_connection()
     c = conn.cursor()
 
-    # Verifica logica da usare
-    logic_row = c.execute("SELECT value FROM state WHERE key = 'ranking_logic'").fetchone()
-    use_olympic_logic = logic_row and logic_row[0] == "olympic"
-
-    query = '''
-    SELECT 
-        a.name || ' ' || a.surname AS Atleta,
-        a.club AS Società,
-        SUM(s.score) AS Totale
-    FROM scores s
-    JOIN athletes a ON a.id = s.athlete_id
-    GROUP BY s.athlete_id
-    ORDER BY Totale DESC
-    '''
+    try:
+        row = c.execute("SELECT value FROM state WHERE key = 'use_olympic_logic'").fetchone()
+        use_olympic_logic = row and row[0] == "1"
+    except:
+        use_olympic_logic = True
 
     try:
-        results = c.execute(query).fetchall()
+        results = c.execute("""
+            SELECT 
+                a.name || ' ' || a.surname AS Atleta,
+                a.club AS Società,
+                SUM(s.score) AS Totale
+            FROM scores s
+            JOIN athletes a ON a.id = s.athlete_id
+            GROUP BY s.athlete_id
+            ORDER BY Totale DESC
+        """).fetchall()
     except Exception as e:
         st.error(f"Errore durante l'esecuzione della classifica: {e}")
         conn.close()
         return
 
+    nome = c.execute("SELECT value FROM state WHERE key = 'nome_competizione'").fetchone()
     conn.close()
 
     if not results:
@@ -48,38 +47,11 @@ def show_ranking():
     end = start + per_page
     display_data = results[start:end]
 
-    # Titolo competizione
-    nome = None
-    conn = get_connection()
-    c = conn.cursor()
-    try:
-        nome = c.execute("SELECT value FROM state WHERE key = 'nome_competizione'").fetchone()
-    finally:
-        conn.close()
-
     if nome:
         st.markdown(f"<h2 style='text-align: center;'>{nome[0]}</h2>", unsafe_allow_html=True)
 
     st.markdown("<h3 style='text-align: center;'>Classifica Generale - All Around</h3>", unsafe_allow_html=True)
 
-    # Calcola posizioni con logica scelta
-    positions = []
-    prev_score = None
-    real_position = 0
-    last_assigned = 0
-
-    for i, row in enumerate(display_data):
-        score = row[2]
-        real_position += 1
-        if score != prev_score:
-            position = real_position if use_olympic_logic else last_assigned + 1
-        else:
-            position = last_assigned
-        positions.append(position)
-        prev_score = score
-        last_assigned = position
-
-    # Costruzione tabella HTML
     html = """<table style='width: 90%; margin: auto; border-collapse: collapse; font-size: 22px;'>
         <thead>
             <tr style='background-color: #003366; color: white; text-align: center;'>
@@ -92,16 +64,34 @@ def show_ranking():
         <tbody>
     """
 
-    for pos, row in zip(positions, display_data):
-        bg = "#FFD700" if pos == 1 else "#C0C0C0" if pos == 2 else "#CD7F32" if pos == 3 else "#f0f8ff" if pos % 2 == 0 else "#ffffff"
+    pos = 1
+    shown_rank = 1
+    prev_score = None
+
+    for i, row in enumerate(display_data):
+        name, club, score = row
+        score = round(score, 3)
+
+        if use_olympic_logic:
+            if score != prev_score:
+                shown_rank = pos
+        else:
+            if score != prev_score:
+                shown_rank = shown_rank + 1 if i > 0 else 1
+
+        bg = "#FFD700" if shown_rank == 1 else "#C0C0C0" if shown_rank == 2 else "#CD7F32" if shown_rank == 3 else ("#f0f8ff" if i % 2 == 0 else "#ffffff")
+
         html += f"""
         <tr style='text-align: center; background-color: {bg};'>
-            <td style='padding: 6px; font-weight: bold;'>{pos}</td>
-            <td style='padding: 6px;'>{row[0]}</td>
-            <td style='padding: 6px;'>{row[1]}</td>
-            <td style='padding: 6px; font-weight: bold; color: #006600;'>{row[2]:.3f}</td>
+            <td style='padding: 6px; font-weight: bold;'>{shown_rank}</td>
+            <td style='padding: 6px;'>{name}</td>
+            <td style='padding: 6px;'>{club}</td>
+            <td style='padding: 6px; font-weight: bold; color: #006600;'>{score:.3f}</td>
         </tr>
         """
+
+        prev_score = score
+        pos += 1
 
     html += "</tbody></table>"
     st.components.v1.html(html, height=700, scrolling=True)
