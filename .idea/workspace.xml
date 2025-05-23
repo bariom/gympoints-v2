@@ -4,8 +4,9 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="580034fe-b43f-4fbd-a300-4d17bf8eba73" name="Changes" comment="config per togliere toolbar streamlit">
+    <list default="true" id="580034fe-b43f-4fbd-a300-4d17bf8eba73" name="Changes" comment="Fix logica di rotazione con logica di rotazione olimpica">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/admin.py" beforeDir="false" afterPath="$PROJECT_DIR$/admin.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -25,6 +26,11 @@
     </option>
   </component>
   <component name="Git.Settings">
+    <option name="RECENT_BRANCH_BY_REPOSITORY">
+      <map>
+        <entry key="$PROJECT_DIR$" value="master" />
+      </map>
+    </option>
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
   <component name="MarkdownSettingsMigration">
@@ -41,15 +47,15 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;Python.setup_db.executor&quot;: &quot;Run&quot;,
-    &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;sviluppo&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;vcs.Git&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "Python.setup_db.executor": "Run",
+    "RunOnceActivity.OpenProjectViewOnStart": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "git-widget-placeholder": "sviluppo",
+    "settings.editor.selected.configurable": "vcs.Git"
   }
-}</component>
+}]]></component>
   <component name="RunManager">
     <configuration name="setup_db" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="gympoints" />
@@ -94,30 +100,6 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1747744575802</updated>
-    </task>
-    <task id="LOCAL-00066" summary="Possibilità di mostrare classifica sul live.">
-      <option name="closed" value="true" />
-      <created>1747833811150</created>
-      <option name="number" value="00066" />
-      <option name="presentableId" value="LOCAL-00066" />
-      <option name="project" value="LOCAL" />
-      <updated>1747833811150</updated>
-    </task>
-    <task id="LOCAL-00067" summary="Possibilità di mostrare classifica sul live.">
-      <option name="closed" value="true" />
-      <created>1747834230802</created>
-      <option name="number" value="00067" />
-      <option name="presentableId" value="LOCAL-00067" />
-      <option name="project" value="LOCAL" />
-      <updated>1747834230802</updated>
-    </task>
-    <task id="LOCAL-00068" summary="Nuova funzionalità: Pagina per il voto del singolo giudice">
-      <option name="closed" value="true" />
-      <created>1747836046151</created>
-      <option name="number" value="00068" />
-      <option name="presentableId" value="LOCAL-00068" />
-      <option name="project" value="LOCAL" />
-      <updated>1747836046151</updated>
     </task>
     <task id="LOCAL-00069" summary="Nuova funzionalità: Pagina per il voto del singolo giudice">
       <option name="closed" value="true" />
@@ -487,7 +469,31 @@
       <option name="project" value="LOCAL" />
       <updated>1748006726073</updated>
     </task>
-    <option name="localTasksCounter" value="115" />
+    <task id="LOCAL-00115" summary="config per togliere toolbar streamlit">
+      <option name="closed" value="true" />
+      <created>1748007884654</created>
+      <option name="number" value="00115" />
+      <option name="presentableId" value="LOCAL-00115" />
+      <option name="project" value="LOCAL" />
+      <updated>1748007884654</updated>
+    </task>
+    <task id="LOCAL-00116" summary="Fix logica di rotazione">
+      <option name="closed" value="true" />
+      <created>1748008947364</created>
+      <option name="number" value="00116" />
+      <option name="presentableId" value="LOCAL-00116" />
+      <option name="project" value="LOCAL" />
+      <updated>1748008947364</updated>
+    </task>
+    <task id="LOCAL-00117" summary="Fix logica di rotazione con logica di rotazione olimpica">
+      <option name="closed" value="true" />
+      <created>1748010106748</created>
+      <option name="number" value="00117" />
+      <option name="presentableId" value="LOCAL-00117" />
+      <option name="project" value="LOCAL" />
+      <updated>1748010106748</updated>
+    </task>
+    <option name="localTasksCounter" value="118" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -502,8 +508,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="Modifica nel sistema di attribuzione punti." />
-    <MESSAGE value="Modifica al colore del punteggio" />
     <MESSAGE value="Modifica layout live" />
     <MESSAGE value="Modifica layout ranking" />
     <MESSAGE value="Migliorato la tabella di tutti i punteggi" />
@@ -527,6 +531,8 @@
     <MESSAGE value="QRCode per link alla pagina del giudice" />
     <MESSAGE value="Fix per logica di rotazione circolare" />
     <MESSAGE value="config per togliere toolbar streamlit" />
-    <option name="LAST_COMMIT_MESSAGE" value="config per togliere toolbar streamlit" />
+    <MESSAGE value="Fix logica di rotazione" />
+    <MESSAGE value="Fix logica di rotazione con logica di rotazione olimpica" />
+    <option name="LAST_COMMIT_MESSAGE" value="Fix logica di rotazione con logica di rotazione olimpica" />
   </component>
 </project>
