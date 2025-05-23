@@ -76,7 +76,7 @@ def show_admin():
         )
 
         st.markdown("### QR Code di accesso giudici")
-        url_base = st.text_input("URL base dell'applicazione", value=st.session_state.get("url_base", "https://svil-gympoints.streamlit.app"))
+        url_base = st.text_input("URL base dell'applicazione", value=st.session_state.get("url_base", "https://gympoints.streamlit.app"))
         st.session_state["url_base"] = url_base
 
         giudici = c.execute("SELECT name, surname, code FROM judges").fetchall()
