@@ -4,6 +4,9 @@ import pandas as pd
 import hashlib
 from io import StringIO
 from db import get_connection
+import qrcode
+from PIL import Image
+import io
 
 def show_admin():
     st.title("Amministrazione Gara")
@@ -47,7 +50,6 @@ def show_admin():
         st.dataframe(c.execute("SELECT * FROM athletes").fetchall(), use_container_width=True)
 
     def genera_codice_giudice(nome: str, cognome: str) -> str:
-        """Genera un codice a 4 cifre stabile per un giudice."""
         combinazione = f"{nome.lower()}_{cognome.lower()}"
         hash_val = hashlib.sha256(combinazione.encode()).hexdigest()
         code = int(hash_val[:4], 16) % 10000
@@ -68,11 +70,29 @@ def show_admin():
                 conn.commit()
                 st.success(f"Giudice aggiunto. Codice accesso: {code}")
 
-        # Mostra tutti i giudici con codice
         st.dataframe(
             c.execute("SELECT name, surname, apparatus, code FROM judges").fetchall(),
             use_container_width=True
         )
+
+        st.markdown("### QR Code di accesso giudici")
+        url_base = st.text_input("URL base dell'applicazione", value=st.session_state.get("url_base", "https://svil-gympoints.streamlit.app"))
+        st.session_state["url_base"] = url_base
+
+        giudici = c.execute("SELECT name, surname, code FROM judges").fetchall()
+        giudici_dict = {f"{name} {surname} [{code}]": (name, surname, code) for name, surname, code in giudici}
+        selezione = st.selectbox("Seleziona un giudice per visualizzare il QR:", list(giudici_dict.keys()))
+
+        if selezione:
+            name, surname, code = giudici_dict[selezione]
+            giudice_key = f"{surname.lower()}{code}"
+            full_url = f"{url_base}/?giudice={giudice_key}"
+            qr_img = qrcode.make(full_url)
+            buf = io.BytesIO()
+            qr_img.save(buf)
+            buf.seek(0)
+            st.markdown(f"#### {name} {surname} - Codice: {code}")
+            st.image(buf, caption=full_url, use_column_width=False)
 
     with tab3:
         st.subheader("Gestione Rotazioni")
