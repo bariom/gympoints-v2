@@ -1,9 +1,8 @@
+
 import time
 import streamlit as st
 from db import get_connection
 from streamlit_autorefresh import st_autorefresh
-
-st.set_page_config(layout="wide")
 
 def show_live():
     st_autorefresh(interval=2000, key="refresh_live")
@@ -11,24 +10,17 @@ def show_live():
     conn = get_connection()
     c = conn.cursor()
 
-    nome_comp = c.execute("SELECT value FROM state WHERE key = 'nome_competizione'").fetchone()
-    if nome_comp:
-        st.markdown(f"<h2 style='text-align: center; margin-bottom: 5px;'>{nome_comp[0]}</h2>", unsafe_allow_html=True)
-
     rotazione_corrente = int(c.execute("SELECT value FROM state WHERE key = 'rotazione_corrente'").fetchone()[0])
-    st.markdown(f"<h3 style='text-align: center; margin-bottom: 5px;'>Rotazione {rotazione_corrente}</h3>", unsafe_allow_html=True)
+    nome_comp = c.execute("SELECT value FROM state WHERE key = 'nome_competizione'").fetchone()
     show_ranking_live = c.execute("SELECT value FROM state WHERE key = 'show_ranking_live'").fetchone()
     show_ranking_active = show_ranking_live and show_ranking_live[0] == "1"
 
+    if nome_comp:
+        st.markdown(f"<h2 style='text-align: center; margin-bottom: 5px;'>{nome_comp[0]}</h2>", unsafe_allow_html=True)
 
-    if show_ranking_active:
-        col_attrezzi, col_classifica = st.columns([2, 1])
-    else:
-        col_attrezzi = st.container()
+    st.markdown(f"<h3 style='text-align: center; margin-bottom: 5px;'>Rotazione {rotazione_corrente}</h3>", unsafe_allow_html=True)
 
     attrezzi = ["Suolo", "Cavallo a maniglie", "Anelli", "Volteggio", "Parallele", "Sbarra"]
-    col1, col2, col3 = col_attrezzi.columns(3)
-    col_map = [col1, col2, col3, col1, col2, col3]
 
     now = time.time()
     if "progresso_live" not in st.session_state:
@@ -37,6 +29,13 @@ def show_live():
         st.session_state["score_timers"] = {}
 
     tutti_attrezzi_completati = True
+
+    if show_ranking_active:
+        col1, col2, col3, col4 = st.columns([1, 1, 1, 1.2])
+        col_map = [col1, col2, col3, col1, col2, col3]
+    else:
+        col1, col2, col3 = st.columns(3)
+        col_map = [col1, col2, col3, col1, col2, col3]
 
     for i, attrezzo in enumerate(attrezzi):
         col = col_map[i]
@@ -65,7 +64,10 @@ def show_live():
         atleta_id, nome = atleti[index]
         col.markdown(f"<div style='text-align: center; font-size: 20px; margin-top: 10px;'><b>{nome}</b></div>", unsafe_allow_html=True)
 
-        score_row = c.execute("SELECT score FROM scores WHERE athlete_id = ? AND apparatus = ?", (atleta_id, attrezzo)).fetchone()
+        score_row = c.execute("""
+            SELECT score FROM scores 
+            WHERE athlete_id = ? AND apparatus = ?
+        """, (atleta_id, attrezzo)).fetchone()
 
         if score_row:
             punteggio = round(score_row[0], 3)
@@ -86,27 +88,27 @@ def show_live():
         st.info("Tutti gli attrezzi hanno completato la rotazione. Attendere l'avanzamento manuale.")
 
     if show_ranking_active:
-        with col_classifica:
+        with col4:
             st.markdown("<h4 style='text-align: center;'>Classifica provvisoria</h4>", unsafe_allow_html=True)
 
             classifica = c.execute("""
                 SELECT 
                     a.name || ' ' || a.surname AS Atleta,
-                    a.club AS Società,
-                    SUM(score) AS Totale
+                    a.club,
+                    SUM(s.score) AS Totale
                 FROM scores s
                 JOIN athletes a ON a.id = s.athlete_id
-                GROUP BY a.id
+                GROUP BY s.athlete_id
                 ORDER BY Totale DESC
-                LIMIT 30
+                LIMIT 20
             """).fetchall()
 
-            left_col, mid_col, right_col = st.columns(3)
-            columns = [left_col, mid_col, right_col]
-
+            col_a, col_b = st.columns(2)
             for i, (nome, club, totale) in enumerate(classifica):
-                col = columns[i // 10]
-                col.markdown(f"<div style='font-size:16px;'>{i+1}. <b>{nome} — {totale:.3f}</b><br><i style='font-size: 14px;'>{club}</i></div>", unsafe_allow_html=True)
-
+                colonna = col_a if i < 10 else col_b
+                colonna.markdown(
+                    f"<div style='font-size:16px; margin-bottom: 8px;'><b>{i+1}. {nome} — {totale:.3f}</b><br><span style='font-size:14px;'><i>{club}</i></span></div>",
+                    unsafe_allow_html=True
+                )
 
     conn.close()
