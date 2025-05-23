@@ -12,8 +12,8 @@ def show_ranking():
     c = conn.cursor()
 
     try:
-        row = c.execute("SELECT value FROM state WHERE key = 'use_olympic_logic'").fetchone()
-        use_olympic_logic = row and row[0] == "1"
+        row = c.execute("SELECT value FROM state WHERE key = 'logica_classifica'").fetchone()
+        use_olympic_logic = row and row[0] == "olimpica"
     except:
         use_olympic_logic = True
 
@@ -67,6 +67,7 @@ def show_ranking():
     pos = 1
     shown_rank = 1
     prev_score = None
+    skip_count = 0
 
     for i, row in enumerate(display_data):
         name, club, score = row
@@ -75,6 +76,9 @@ def show_ranking():
         if use_olympic_logic:
             if prev_score is None or score != prev_score:
                 shown_rank = pos
+                skip_count = 1
+            else:
+                skip_count += 1
         else:
             if prev_score is None:
                 shown_rank = 1
@@ -93,7 +97,7 @@ def show_ranking():
         """
 
         prev_score = score
-        pos += 1
+        pos += 1 if use_olympic_logic else 0
 
     html += "</tbody></table>"
     st.components.v1.html(html, height=700, scrolling=True)
