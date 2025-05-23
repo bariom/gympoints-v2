@@ -1,3 +1,4 @@
+
 import streamlit as st
 import sqlite3
 import pandas as pd
@@ -23,7 +24,13 @@ def show_ranking():
     ORDER BY Totale DESC
     """
 
-    results = c.execute(query).fetchall()
+    try:
+        results = c.execute(query).fetchall()
+    except Exception as e:
+        st.error(f"Errore durante l'esecuzione della classifica: {e}")
+        conn.close()
+        return
+
     conn.close()
 
     if not results:
