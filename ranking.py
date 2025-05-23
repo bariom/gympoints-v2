@@ -91,7 +91,7 @@ def show_ranking():
         """
 
     html += "</tbody></table>"
-    st.markdown(html, unsafe_allow_html=True)
+    st.components.v1.html(html, height=700, scrolling=True)
 
     # Pagina successiva
     st.session_state["ranking_page"] = (current_page + 1) % total_pages
