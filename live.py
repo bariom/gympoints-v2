@@ -11,7 +11,12 @@ def show_live():
     conn = get_connection()
     c = conn.cursor()
 
+    nome_comp = c.execute("SELECT value FROM state WHERE key = 'nome_competizione'").fetchone()
+    if nome_comp:
+        st.markdown(f"<h2 style='text-align: center; margin-bottom: 5px;'>{nome_comp[0]}</h2>", unsafe_allow_html=True)
+
     rotazione_corrente = int(c.execute("SELECT value FROM state WHERE key = 'rotazione_corrente'").fetchone()[0])
+    st.markdown(f"<h3 style='text-align: center; margin-bottom: 5px;'>Rotazione {rotazione_corrente}</h3>", unsafe_allow_html=True)
     show_ranking_live = c.execute("SELECT value FROM state WHERE key = 'show_ranking_live'").fetchone()
     show_ranking_active = show_ranking_live and show_ranking_live[0] == "1"
 
