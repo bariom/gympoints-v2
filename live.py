@@ -10,7 +10,6 @@ def show_live():
     conn = get_connection()
     c = conn.cursor()
 
-    # Recupera impostazioni
     rotazione_corrente = int(c.execute("SELECT value FROM state WHERE key = 'rotazione_corrente'").fetchone()[0])
     row = c.execute("SELECT value FROM state WHERE key = 'show_ranking_live'").fetchone()
     show_ranking_active = row and row[0] == "1"
@@ -79,7 +78,6 @@ def show_live():
     if tutti_attrezzi_completati:
         st.info("Tutti gli attrezzi hanno completato la rotazione. Attendere l'avanzamento manuale.")
 
-    # Classifica a lato
     if show_ranking_active:
         st.markdown("<hr>", unsafe_allow_html=True)
         st.markdown("<h4 style='text-align: center;'>Classifica provvisoria</h4>", unsafe_allow_html=True)
@@ -87,15 +85,21 @@ def show_live():
         classifica = c.execute("""
             SELECT 
                 a.name || ' ' || a.surname AS Atleta,
+                a.club,
                 SUM(s.score) AS Totale
             FROM scores s
             JOIN athletes a ON a.id = s.athlete_id
             GROUP BY s.athlete_id
             ORDER BY Totale DESC
-            LIMIT 10
+            LIMIT 30
         """).fetchall()
 
-        for i, row in enumerate(classifica, start=1):
-            st.markdown(f"<div style='font-size:18px;'>{i}. {row[0]} — <b>{row[1]:.3f}</b></div>", unsafe_allow_html=True)
+        if classifica:
+            blocchi = [classifica[i:i+10] for i in range(0, len(classifica), 10)]
+            cols = st.columns(len(blocchi))
+            for i, blocco in enumerate(blocchi):
+                with cols[i]:
+                    for j, row in enumerate(blocco, start=1 + i*10):
+                        st.markdown(f"<div style='font-size:16px;'>{j}. <b>{row[0]}</b><br/><i>{row[1]}</i> — <b>{row[2]:.3f}</b></div><br/>", unsafe_allow_html=True)
 
     conn.close()
