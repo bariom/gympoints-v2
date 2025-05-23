@@ -1,35 +1,25 @@
 import streamlit as st
 import sqlite3
-from db import get_connection
+import pandas as pd
 from streamlit_autorefresh import st_autorefresh
 
 def show_ranking():
-    # Auto-refresh ogni 10 secondi
-    st_autorefresh(interval=10_000, key="auto_refresh")
+    st_autorefresh(interval=10000, key="auto_refresh")
 
-    # Gestione paginazione
     if "ranking_page" not in st.session_state:
         st.session_state["ranking_page"] = 0
 
-    conn = get_connection()
+    conn = sqlite3.connect("data.db")
     c = conn.cursor()
 
     query = """
     SELECT 
         a.name || ' ' || a.surname AS Atleta,
         a.club AS Società,
-        SUM(avg_score) AS Totale
-    FROM (
-        SELECT 
-            s.apparatus,
-            s.athlete_id,
-            AVG(s.score) AS avg_score
-        FROM scores s
-        GROUP BY s.apparatus, s.athlete_id
-        HAVING COUNT(*) = 2
-    ) AS sub
-    JOIN athletes a ON a.id = sub.athlete_id
-    GROUP BY sub.athlete_id
+        SUM(s.score) AS Totale
+    FROM scores s
+    JOIN athletes a ON a.id = s.athlete_id
+    GROUP BY s.athlete_id
     ORDER BY Totale DESC
     """
 
@@ -42,32 +32,18 @@ def show_ranking():
 
     per_page = 15
     total_pages = (len(results) - 1) // per_page + 1
-
-    # Calcola range pagina corrente
     current_page = st.session_state["ranking_page"]
     start = current_page * per_page
     end = start + per_page
     display_data = results[start:end]
 
-    # Titolo
-    nome = None
-    conn = get_connection()
-    c = conn.cursor()
-    try:
-        nome = c.execute("SELECT value FROM state WHERE key = 'nome_competizione'").fetchone()
-    finally:
-        conn.close()
-
-    if nome:
-        st.markdown(f"<h2 style='text-align: center;'>{nome[0]}</h2>", unsafe_allow_html=True)
-
     st.markdown(
-        "<h3 style='text-align: center;'>Classifica Generale - All Around</h3>",
+        "<h2 style='text-align: center;'>Classifica Generale - All Around</h2>",
         unsafe_allow_html=True
     )
 
-    # Costruzione tabella
-    html = """<table style='width: 90%; margin: auto; border-collapse: collapse; font-size: 22px;'>
+    html = """
+    <table style='width: 90%; margin: auto; border-collapse: collapse; font-size: 22px;'>
         <thead>
             <tr style='background-color: #003366; color: white; text-align: center;'>
                 <th style='padding: 8px;'>Posizione</th>
@@ -80,28 +56,25 @@ def show_ranking():
     """
 
     for i, row in enumerate(display_data, start=start + 1):
-        # Evidenziazione podio
         if i == 1:
-            bg_color = "#FFD700"  # oro
+            bg = "#FFD700"
         elif i == 2:
-            bg_color = "#C0C0C0"  # argento
+            bg = "#C0C0C0"
         elif i == 3:
-            bg_color = "#CD7F32"  # bronzo
+            bg = "#CD7F32"
         else:
-            bg_color = "#f0f8ff" if i % 2 == 0 else "#ffffff"
+            bg = "#f0f8ff" if i % 2 == 0 else "#ffffff"
 
-        html += (
-            f"<tr style='text-align: center; background-color: {bg_color};'>"
-            f"<td style='padding: 6px; font-weight: bold;'>{i}</td>"
-            f"<td style='padding: 6px;'>{row[0]}</td>"
-            f"<td style='padding: 6px;'>{row[1]}</td>"
-            f"<td style='padding: 6px; font-weight: bold; color: #006600;'>{row[2]:.3f}</td>"
-            f"</tr>"
-        )
+        html += f"""
+        <tr style='text-align: center; background-color: {bg};'>
+            <td style='padding: 6px; font-weight: bold;'>{i}</td>
+            <td style='padding: 6px;'>{row[0]}</td>
+            <td style='padding: 6px;'>{row[1]}</td>
+            <td style='padding: 6px; font-weight: bold; color: #006600;'>{row[2]:.3f}</td>
+        </tr>
+        """
 
     html += "</tbody></table>"
-
     st.markdown(html, unsafe_allow_html=True)
 
-    # Passa alla prossima pagina ciclicamente
     st.session_state["ranking_page"] = (current_page + 1) % total_pages

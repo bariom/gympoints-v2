@@ -1,3 +1,4 @@
+
 import time
 import streamlit as st
 from db import get_connection
@@ -9,26 +10,12 @@ def show_live():
     conn = get_connection()
     c = conn.cursor()
 
-    # Recupera impostazioni
     rotazione_corrente = int(c.execute("SELECT value FROM state WHERE key = 'rotazione_corrente'").fetchone()[0])
-    nome_comp = c.execute("SELECT value FROM state WHERE key = 'nome_competizione'").fetchone()
-    show_ranking_live = c.execute("SELECT value FROM state WHERE key = 'show_ranking_live'").fetchone()
-    show_ranking_active = show_ranking_live and show_ranking_live[0] == "1"
-
-    # Titolo competizione
-    if nome_comp:
-        st.markdown(f"<h2 style='text-align: center;'>{nome_comp[0]}</h2>", unsafe_allow_html=True)
-
-    st.markdown(f"<h4 style='text-align: center;'>Rotazione {rotazione_corrente}</h4>", unsafe_allow_html=True)
+    st.markdown(f"<h2 style='text-align: center; margin-bottom: 5px;'>Rotazione {rotazione_corrente}</h2>", unsafe_allow_html=True)
 
     attrezzi = ["Suolo", "Cavallo a maniglie", "Anelli", "Volteggio", "Parallele", "Sbarra"]
-
-    if show_ranking_active:
-        col1, col2, col3, col4 = st.columns([1, 1, 1, 1.2])
-        col_map = [col1, col2, col3, col1, col2, col3]
-    else:
-        col1, col2, col3 = st.columns(3)
-        col_map = [col1, col2, col3, col1, col2, col3]
+    col1, col2, col3 = st.columns(3)
+    col_map = [col1, col2, col3, col1, col2, col3]
 
     now = time.time()
     if "progresso_live" not in st.session_state:
@@ -40,12 +27,7 @@ def show_live():
 
     for i, attrezzo in enumerate(attrezzi):
         col = col_map[i]
-
-        # intestazione attrezzo in stile blu
-        col.markdown(
-            f"<div style='background-color:#003366; color:white; text-align:center; padding:8px; border-radius:6px; font-weight:bold; font-size:18px;'>{attrezzo.upper()}</div>",
-            unsafe_allow_html=True
-        )
+        col.markdown(f"<div style='background-color: #003366; color: white; text-align: center; padding: 6px; font-size: 22px; font-weight: bold; border-radius: 4px;'>{attrezzo}</div>", unsafe_allow_html=True)
 
         atleti = c.execute("""
             SELECT a.id, a.name || ' ' || a.surname AS nome
@@ -68,34 +50,31 @@ def show_live():
 
         tutti_attrezzi_completati = False
         atleta_id, nome = atleti[index]
-        col.markdown(f"<div style='font-size:26px; text-align: center; font-weight: 600;'>{nome}</div>", unsafe_allow_html=True)
+        col.markdown(f"<div style='text-align: center; font-size: 20px; margin-top: 10px;'><b>{nome}</b></div>", unsafe_allow_html=True)
 
-        # Recupera punteggi
-        scores = c.execute("""
+        score_row = c.execute("""
             SELECT score FROM scores 
             WHERE athlete_id = ? AND apparatus = ?
-        """, (atleta_id, attrezzo)).fetchall()
+        """, (atleta_id, attrezzo)).fetchone()
 
-        if len(scores) == 2:
-            media = round(sum(s[0] for s in scores) / 2, 3)
+        if score_row:
+            punteggio = round(score_row[0], 3)
             timer_key = f"{attrezzo}_{atleta_id}_{rotazione_corrente}"
             shown_at = st.session_state["score_timers"].get(timer_key)
 
             if shown_at is None:
                 st.session_state["score_timers"][timer_key] = now
-                col.markdown(
-                    f"<div style='text-align: center; font-size: 28px; font-weight: bold; color: #009966;'>{media:.3f}</div>",
-                    unsafe_allow_html=True
-                )
+                col.markdown(f"<div style='text-align: center; font-size: 28px; font-weight: bold; color: #009966;'>{punteggio:.3f}</div>", unsafe_allow_html=True)
             elif now - shown_at < 20:
-                col.markdown(
-                    f"<div style='text-align: center; font-size: 28px; font-weight: bold; color: #009966;'>{media:.3f}</div>",
-                    unsafe_allow_html=True
-                )
+                col.markdown(f"<div style='text-align: center; font-size: 28px; font-weight: bold; color: #009966;'>{punteggio:.3f}</div>", unsafe_allow_html=True)
             else:
                 st.session_state["progresso_live"][key_prog] = index + 1
         else:
-            col.warning("⏳ In attesa del punteggio di entrambi i giudici")
+            col.warning("⏳ In attesa del punteggio")
+
+    if tutti_attrezzi_completati:
+        st.info("In attesa della prossima rotazione.")
+
 
     if tutti_attrezzi_completati:
         st.info("Tutti gli attrezzi hanno completato la rotazione. Attendere l'avanzamento manuale.")
