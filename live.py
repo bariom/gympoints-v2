@@ -5,19 +5,22 @@ from db import get_connection
 from streamlit_autorefresh import st_autorefresh
 
 def show_live():
+    st.set_page_config(layout="wide")
     st_autorefresh(interval=5000, key="refresh_live")
 
     conn = get_connection()
     c = conn.cursor()
 
     rotazione_corrente = int(c.execute("SELECT value FROM state WHERE key = 'rotazione_corrente'").fetchone()[0])
-    row = c.execute("SELECT value FROM state WHERE key = 'show_ranking_live'").fetchone()
-    show_ranking_active = row and row[0] == "1"
+    show_ranking_live = c.execute("SELECT value FROM state WHERE key = 'show_ranking_live'").fetchone()
+    show_ranking_active = show_ranking_live and show_ranking_live[0] == "1"
 
     st.markdown(f"<h2 style='text-align: center; margin-bottom: 5px;'>Rotazione {rotazione_corrente}</h2>", unsafe_allow_html=True)
 
+    col_attrezzi, col_classifica = st.columns([2, 1])
+
     attrezzi = ["Suolo", "Cavallo a maniglie", "Anelli", "Volteggio", "Parallele", "Sbarra"]
-    col1, col2, col3 = st.columns(3)
+    col1, col2, col3 = col_attrezzi.columns(3)
     col_map = [col1, col2, col3, col1, col2, col3]
 
     now = time.time()
@@ -79,27 +82,29 @@ def show_live():
         st.info("Tutti gli attrezzi hanno completato la rotazione. Attendere l'avanzamento manuale.")
 
     if show_ranking_active:
-        st.markdown("<hr>", unsafe_allow_html=True)
-        st.markdown("<h4 style='text-align: center;'>Classifica provvisoria</h4>", unsafe_allow_html=True)
+        with col_classifica:
+            st.markdown("<h4 style='text-align: center;'>Classifica provvisoria</h4>", unsafe_allow_html=True)
 
-        classifica = c.execute("""
-            SELECT 
-                a.name || ' ' || a.surname AS Atleta,
-                a.club,
-                SUM(s.score) AS Totale
-            FROM scores s
-            JOIN athletes a ON a.id = s.athlete_id
-            GROUP BY s.athlete_id
-            ORDER BY Totale DESC
-            LIMIT 30
-        """).fetchall()
+            classifica = c.execute("""
+                SELECT 
+                    a.name || ' ' || a.surname AS Atleta,
+                    a.club,
+                    SUM(score) AS Totale
+                FROM scores s
+                JOIN athletes a ON a.id = s.athlete_id
+                GROUP BY s.athlete_id
+                ORDER BY Totale DESC
+                LIMIT 30
+            """).fetchall()
 
-        if classifica:
-            blocchi = [classifica[i:i+10] for i in range(0, len(classifica), 10)]
-            cols = st.columns(len(blocchi))
-            for i, blocco in enumerate(blocchi):
-                with cols[i]:
-                    for j, row in enumerate(blocco, start=1 + i*10):
-                        st.markdown(f"<div style='font-size:16px;'>{j}. <b>{row[0]}</b><br/><i>{row[1]}</i> — <b>{row[2]:.3f}</b></div><br/>", unsafe_allow_html=True)
+            left, mid, right = st.columns(3)
+            for i, row in enumerate(classifica, start=1):
+                block = f"<b>{i}. {row[0]}</b><br><i>{row[1]}</i> — <b>{row[2]:.3f}</b><br><br>"
+                if i <= 10:
+                    left.markdown(block, unsafe_allow_html=True)
+                elif i <= 20:
+                    mid.markdown(block, unsafe_allow_html=True)
+                else:
+                    right.markdown(block, unsafe_allow_html=True)
 
     conn.close()
