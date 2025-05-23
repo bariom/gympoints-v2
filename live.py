@@ -23,8 +23,8 @@ def show_live():
     show_ranking_active = show_ranking_live and show_ranking_live[0] == "1"
 
     # Switch logica classifica
-    logica_olimpica = c.execute("SELECT value FROM state WHERE key = 'ranking_logic'").fetchone()
-    usa_logica_olimpica = not logica_olimpica or logica_olimpica[0] == "olimpica"
+    logica_classifica = c.execute("SELECT value FROM state WHERE key = 'logica_classifica'").fetchone()
+    usa_logica_olimpica = logica_classifica and logica_classifica[0] == "olimpica"
 
     attrezzi = ["Suolo", "Cavallo a maniglie", "Anelli", "Volteggio", "Parallele", "Sbarra"]
     col1, col2, col3 = st.columns([1, 1, 1]) if not show_ranking_active else st.columns([1, 1, 1, 1])
@@ -92,7 +92,6 @@ def show_live():
         col_classifica = col_map[-1]
         col_classifica.markdown("<h4 style='text-align: center;'>Classifica provvisoria</h4>", unsafe_allow_html=True)
 
-        # Query classifica
         classifica = c.execute("""
             SELECT 
                 a.name || ' ' || a.surname AS nome,
@@ -107,20 +106,26 @@ def show_live():
         posizione = 1
         posizione_effettiva = 1
         punteggio_precedente = None
+        skip_count = 0
 
         for i, (nome, club, totale) in enumerate(classifica[:20], start=1):
             if punteggio_precedente is not None:
                 if totale == punteggio_precedente:
-                    pass  # stessa posizione
+                    skip_count += 1
                 else:
                     if usa_logica_olimpica:
                         posizione_effettiva = posizione
+                        skip_count = 1
                     else:
                         posizione_effettiva += 1
+            else:
+                skip_count = 1
+
             col_classifica.markdown(
                 f"<div style='font-size:16px;'>{posizione_effettiva}. <b>{nome} — {totale:.3f}</b><br/><i>{club}</i></div>",
                 unsafe_allow_html=True
             )
+
             punteggio_precedente = totale
             posizione += 1
 
