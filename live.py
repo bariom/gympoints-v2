@@ -27,8 +27,15 @@ def show_live():
     usa_logica_olimpica = logica_classifica and logica_classifica[0] == "olimpica"
 
     attrezzi = ["Suolo", "Cavallo a maniglie", "Anelli", "Volteggio", "Parallele", "Sbarra"]
-    col1, col2, col3 = st.columns([1, 1, 1]) if not show_ranking_active else st.columns([1, 1, 1, 1])
-    col_map = [col1, col2, col3, col1, col2, col3]
+
+    if show_ranking_active:
+        col1, col2, col3, col4 = st.columns([1, 1, 1, 1])
+        col_map = [col1, col2, col3, col1, col2, col3]
+        col_classifica = col4
+    else:
+        col1, col2, col3 = st.columns([1, 1, 1])
+        col_map = [col1, col2, col3, col1, col2, col3]
+        col_classifica = col3
 
     now = time.time()
     if "progresso_live" not in st.session_state:
@@ -89,7 +96,6 @@ def show_live():
 
     # Mostra classifica provvisoria
     if show_ranking_active:
-        col_classifica = col_map[-1]
         col_classifica.markdown("<h4 style='text-align: center;'>Classifica provvisoria</h4>", unsafe_allow_html=True)
 
         classifica = c.execute("""
