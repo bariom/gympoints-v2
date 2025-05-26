@@ -231,88 +231,89 @@ def show_admin():
             conn.commit()
             st.success("Rotazioni 2–6 generate e salvate correttamente.")
 
-    with tab4:
-        st.subheader("Inserimento Punteggi")
 
-        # Recupera la rotazione corrente
-        rotazione_corrente = int(c.execute("SELECT value FROM state WHERE key = 'rotazione_corrente'").fetchone()[0])
-
-        # Ottieni le rotazioni disponibili per la rotazione corrente
-        rotations = c.execute("""
-            SELECT r.id, a.name || ' ' || a.surname || ' - ' || r.apparatus
-            FROM rotations r
-            JOIN athletes a ON a.id = r.athlete_id
-            WHERE r.rotation_order = ?
-            AND (
-                SELECT COUNT(*) FROM scores s
-                WHERE s.athlete_id = r.athlete_id AND s.apparatus = r.apparatus
-            ) < 2
-            ORDER BY r.apparatus
-        """, (rotazione_corrente,)).fetchall()
-
-        if not rotations:
-            st.info("Nessuna rotazione disponibile per la rotazione corrente.")
-        else:
-            selected_rotation = st.selectbox(
-                "Seleziona atleta e attrezzo",
-                options=rotations,
-                format_func=lambda x: x[1],
-                key="select_rotation"
-            )
-
-            if selected_rotation:
-                rotation_id = selected_rotation[0]
-                app_row = c.execute(
-                    "SELECT apparatus, athlete_id FROM rotations WHERE id = ?", (rotation_id,)
-                ).fetchone()
-                apparatus, athlete_id = app_row
-
-                judges = c.execute("""
-                    SELECT id, name || ' ' || surname || ' (' || apparatus || ')'
-                    FROM judges
-                    WHERE apparatus = ?
-                """, (apparatus,)).fetchall()
-
-                with st.form(f"add_score_form_{rotation_id}"):
-                    st.markdown(f"**Attrezzo:** {apparatus}")
-
-                    if not judges:
-                        st.warning(f"Nessun giudice assegnato a {apparatus}")
-                    else:
-                        judge = st.selectbox("Giudice", judges, format_func=lambda x: x[1], key=f"judge_{rotation_id}")
-                        score = st.number_input("Punteggio", min_value=0.0, max_value=20.0, step=0.05, key=f"score_{rotation_id}")
-
-                        if st.form_submit_button("Registra punteggio"):
-                            existing = c.execute("""
-                                SELECT 1 FROM scores
-                                WHERE apparatus = ? AND athlete_id = ? AND judge_id = ?
-                            """, (apparatus, athlete_id, judge[0])).fetchone()
-
-                            if existing:
-                                st.error("Questo giudice ha già inserito un punteggio per questo atleta su questo attrezzo.")
-                            else:
-                                c.execute("""
-                                    INSERT INTO scores (apparatus, athlete_id, judge_id, score)
-                                    VALUES (?, ?, ?, ?)
-                                """, (apparatus, athlete_id, judge[0], score))
-                                conn.commit()
-                                st.success("Punteggio registrato correttamente")
-
-        st.markdown("### Tutti i punteggi")
-
-        df = pd.read_sql_query("""
-            SELECT 
-                a.name || ' ' || a.surname AS Atleta,
-                j.name || ' ' || j.surname AS Giudice,
-                s.apparatus AS Attrezzo,
-                s.score AS Punteggio
-            FROM scores s
-            JOIN athletes a ON a.id = s.athlete_id
-            JOIN judges j ON j.id = s.judge_id
-            ORDER BY s.apparatus, Atleta
-        """, conn)
-
-        st.dataframe(df, use_container_width=True)
+    # with tab4:
+    #     st.subheader("Inserimento Punteggi")
+    #
+    #     # Recupera la rotazione corrente
+    #     rotazione_corrente = int(c.execute("SELECT value FROM state WHERE key = 'rotazione_corrente'").fetchone()[0])
+    #
+    #     # Ottieni le rotazioni disponibili per la rotazione corrente
+    #     rotations = c.execute("""
+    #         SELECT r.id, a.name || ' ' || a.surname || ' - ' || r.apparatus
+    #         FROM rotations r
+    #         JOIN athletes a ON a.id = r.athlete_id
+    #         WHERE r.rotation_order = ?
+    #         AND (
+    #             SELECT COUNT(*) FROM scores s
+    #             WHERE s.athlete_id = r.athlete_id AND s.apparatus = r.apparatus
+    #         ) < 2
+    #         ORDER BY r.apparatus
+    #     """, (rotazione_corrente,)).fetchall()
+    #
+    #     if not rotations:
+    #         st.info("Nessuna rotazione disponibile per la rotazione corrente.")
+    #     else:
+    #         selected_rotation = st.selectbox(
+    #             "Seleziona atleta e attrezzo",
+    #             options=rotations,
+    #             format_func=lambda x: x[1],
+    #             key="select_rotation"
+    #         )
+    #
+    #         if selected_rotation:
+    #             rotation_id = selected_rotation[0]
+    #             app_row = c.execute(
+    #                 "SELECT apparatus, athlete_id FROM rotations WHERE id = ?", (rotation_id,)
+    #             ).fetchone()
+    #             apparatus, athlete_id = app_row
+    #
+    #             judges = c.execute("""
+    #                 SELECT id, name || ' ' || surname || ' (' || apparatus || ')'
+    #                 FROM judges
+    #                 WHERE apparatus = ?
+    #             """, (apparatus,)).fetchall()
+    #
+    #             with st.form(f"add_score_form_{rotation_id}"):
+    #                 st.markdown(f"**Attrezzo:** {apparatus}")
+    #
+    #                 if not judges:
+    #                     st.warning(f"Nessun giudice assegnato a {apparatus}")
+    #                 else:
+    #                     judge = st.selectbox("Giudice", judges, format_func=lambda x: x[1], key=f"judge_{rotation_id}")
+    #                     score = st.number_input("Punteggio", min_value=0.0, max_value=20.0, step=0.05, key=f"score_{rotation_id}")
+    #
+    #                     if st.form_submit_button("Registra punteggio"):
+    #                         existing = c.execute("""
+    #                             SELECT 1 FROM scores
+    #                             WHERE apparatus = ? AND athlete_id = ? AND judge_id = ?
+    #                         """, (apparatus, athlete_id, judge[0])).fetchone()
+    #
+    #                         if existing:
+    #                             st.error("Questo giudice ha già inserito un punteggio per questo atleta su questo attrezzo.")
+    #                         else:
+    #                             c.execute("""
+    #                                 INSERT INTO scores (apparatus, athlete_id, judge_id, score)
+    #                                 VALUES (?, ?, ?, ?)
+    #                             """, (apparatus, athlete_id, judge[0], score))
+    #                             conn.commit()
+    #                             st.success("Punteggio registrato correttamente")
+    #
+    #     st.markdown("### Tutti i punteggi")
+    #
+    #     df = pd.read_sql_query("""
+    #         SELECT
+    #             a.name || ' ' || a.surname AS Atleta,
+    #             j.name || ' ' || j.surname AS Giudice,
+    #             s.apparatus AS Attrezzo,
+    #             s.score AS Punteggio
+    #         FROM scores s
+    #         JOIN athletes a ON a.id = s.athlete_id
+    #         JOIN judges j ON j.id = s.judge_id
+    #         ORDER BY s.apparatus, Atleta
+    #     """, conn)
+    #
+    #     st.dataframe(df, use_container_width=True)
 
 
     tab5 = st.tabs(["Stato Gara"])[0]
