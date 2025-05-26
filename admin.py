@@ -64,7 +64,8 @@ def show_admin():
             surname = st.text_input("Cognome Giudice")
             apparatus = st.selectbox("Attrezzo",
                                      ["Suolo", "Cavallo a maniglie", "Anelli", "Volteggio", "Parallele", "Sbarra"])
-            if st.form_submit_button("Aggiungi giudice"):
+            add_judge = st.form_submit_button("Aggiungi giudice")
+            if add_judge:
                 code = genera_codice_giudice(name, surname)
                 c.execute("INSERT INTO judges (name, surname, apparatus, code) VALUES (?, ?, ?, ?)",
                           (name, surname, apparatus, code))
@@ -74,10 +75,10 @@ def show_admin():
                 return
 
         # --- TABELLA GIUDICI ---
-        st.dataframe(
-            c.execute("SELECT name, surname, apparatus, code FROM judges").fetchall(),
-            use_container_width=True
+        df_giudici = pd.read_sql_query(
+            "SELECT name, surname, apparatus, code FROM judges ORDER BY surname, name, apparatus", conn
         )
+        st.dataframe(df_giudici, use_container_width=True)
 
         # --- MODIFICA o ELIMINA assegnazione giudice-attrezzo ---
         st.markdown("### Modifica o elimina assegnazione giudice-attrezzo")
@@ -88,6 +89,8 @@ def show_admin():
         ).fetchall()
 
         if assegnazioni:
+            # Chiave dinamica per la selectbox in base a quanti giudici ho
+            select_key = f"edit_judge_assign_{len(assegnazioni)}"
             labels = [
                 f"{row[1]} {row[2]} – {row[3]} [codice: {row[4]}]" for row in assegnazioni
             ]
@@ -96,7 +99,7 @@ def show_admin():
             selected_label = st.selectbox(
                 "Seleziona un’assegnazione da modificare o eliminare",
                 labels,
-                key="edit_judge_assign"
+                key=select_key
             )
             if selected_label:
                 judge_id = id_map[selected_label]
@@ -104,14 +107,17 @@ def show_admin():
                 current_row = next(row for row in assegnazioni if row[0] == judge_id)
                 nome_corr, cognome_corr, apparatus_corr = current_row[1], current_row[2], current_row[3]
 
-                with st.form("form_edit_judge_assign"):
+                # Chiave dinamica per la form di modifica
+                form_key = f"form_edit_judge_assign_{judge_id}"
+                with st.form(form_key):
                     new_name = st.text_input("Nome", value=nome_corr)
                     new_surname = st.text_input("Cognome", value=cognome_corr)
-                    new_apparatus = st.selectbox("Attrezzo",
-                                                 ["Suolo", "Cavallo a maniglie", "Anelli", "Volteggio", "Parallele",
-                                                  "Sbarra"],
-                                                 index=["Suolo", "Cavallo a maniglie", "Anelli", "Volteggio",
-                                                        "Parallele", "Sbarra"].index(apparatus_corr))
+                    new_apparatus = st.selectbox(
+                        "Attrezzo",
+                        ["Suolo", "Cavallo a maniglie", "Anelli", "Volteggio", "Parallele", "Sbarra"],
+                        index=["Suolo", "Cavallo a maniglie", "Anelli", "Volteggio", "Parallele", "Sbarra"].index(
+                            apparatus_corr)
+                    )
                     delete = st.checkbox("Elimina questa assegnazione")
                     submitted = st.form_submit_button("Applica modifiche")
                     if submitted:
@@ -141,9 +147,12 @@ def show_admin():
                                  value=st.session_state.get("url_base", "https://gympoints.streamlit.app"))
         st.session_state["url_base"] = url_base
 
+        # Chiave dinamica per la selectbox dei QR
         giudici = c.execute("SELECT name, surname, code FROM judges").fetchall()
         giudici_dict = {f"{name} {surname} [{code}]": (name, surname, code) for name, surname, code in giudici}
-        selezione = st.selectbox("Seleziona un giudice per visualizzare il QR:", list(giudici_dict.keys()))
+        select_qr_key = f"select_qr_{len(giudici)}"
+        selezione = st.selectbox("Seleziona un giudice per visualizzare il QR:", list(giudici_dict.keys()),
+                                 key=select_qr_key)
 
         if selezione:
             name, surname, code = giudici_dict[selezione]
