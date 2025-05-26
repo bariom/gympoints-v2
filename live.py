@@ -140,7 +140,7 @@ def show_live():
     if tutti_attrezzi_completati:
         st.markdown(
             "<div style='background:#eaffea; color:#0a5d0a; text-align:center; font-size:1.18rem; border-radius: 9px; padding:10px; margin-top:18px;'>"
-            "Tutti gli attrezzi hanno completato la rotazione.<br>Attendere l'avanzamento manuale."
+            "Tutti gli atleti hanno completato la rotazione."
             "</div>",
             unsafe_allow_html=True
         )
