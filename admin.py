@@ -220,6 +220,24 @@ def show_admin():
         """).fetchall()
         st.dataframe(rot_table, use_container_width=True)
 
+        st.markdown("### Elimina intera rotazione")
+
+        # Recupera tutti i numeri di rotazione esistenti
+        rotation_orders = [row[0] for row in c.execute(
+            "SELECT DISTINCT rotation_order FROM rotations ORDER BY rotation_order").fetchall()]
+        if rotation_orders:
+            selected_rot = st.selectbox(
+                "Seleziona la rotazione da eliminare (elimina TUTTI i record di questa rotazione):", rotation_orders,
+                key="delete_rotazione")
+            if st.button("Elimina rotazione selezionata"):
+                c.execute("DELETE FROM rotations WHERE rotation_order = ?", (selected_rot,))
+                conn.commit()
+                st.success(f"Rotazione {selected_rot} eliminata completamente.")
+                st.rerun()
+                return
+        else:
+            st.info("Nessuna rotazione esistente da eliminare.")
+
         st.markdown("### Generazione automatica rotazioni 2–6")
 
         if st.button("🔁 Reset rotazioni"):
