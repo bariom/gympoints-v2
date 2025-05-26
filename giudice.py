@@ -173,21 +173,18 @@ def show_giudice():
                 "Punteggio", min_value=0.0, max_value=20.0, step=0.05, format="%.2f", key="punteggio"
             )
 
-            conferma_zero = False
+            # Session key unica per la conferma zero di questo atleta+attrezzo+rotazione
+            confirm_key = f"conferma_zero_{selected_rotation[0]}_{selected_attrezzo}_{rotazione_corrente}"
+            conferma_zero = st.session_state.get(confirm_key, False)
 
-            # Controllo di conferma per punteggio zero
-            if punteggio == 0.0:
-                # Session key unico per atleta/attrezzo/rotazione
-                confirm_key = f"conferma_zero_{selected_rotation[0]}_{selected_attrezzo}_{rotazione_corrente}"
-                if st.session_state.get(confirm_key, False):
-                    conferma_zero = True
-                else:
-                    if st.form_submit_button("Invia punteggio"):
-                        st.session_state[confirm_key] = True
-                        st.warning("⚠️ Hai assegnato 0 punti. Premi di nuovo 'Invia punteggio' per confermare.")
-                        st.stop()
+            submit = st.form_submit_button("Invia punteggio")
 
-            if st.form_submit_button("Invia punteggio"):
+            if submit:
+                if punteggio == 0.0 and not conferma_zero:
+                    st.session_state[confirm_key] = True
+                    st.warning(
+                        "⚠️ Hai assegnato 0 punti. Premi di nuovo 'Invia punteggio' per confermare il punteggio 0.")
+                    st.stop()  # Blocca l'invio, serve una seconda conferma
                 rot_id = selected_rotation[0]
                 row = c.execute("SELECT athlete_id FROM rotations WHERE id = ?", (rot_id,)).fetchone()
                 if not row:
@@ -221,7 +218,7 @@ def show_giudice():
                             f"</div>",
                             unsafe_allow_html=True
                         )
-                        # reset conferma_zero dopo salvataggio
+                        # Reset conferma dopo salvataggio
                         if punteggio == 0.0:
                             st.session_state[confirm_key] = False
 
