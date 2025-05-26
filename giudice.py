@@ -165,11 +165,27 @@ def show_giudice():
             return
 
         with st.form("form_punteggio"):
-            st.markdown(f"#### <span style='color:#003366'>Inserisci punteggio per <b>{selected_attrezzo}</b></span>", unsafe_allow_html=True)
-            selected_rotation = st.selectbox("Seleziona atleta", rotazioni, format_func=lambda x: x[1], key="sel_atleta")
+            st.markdown(f"#### <span style='color:#003366'>Inserisci punteggio per <b>{selected_attrezzo}</b></span>",
+                        unsafe_allow_html=True)
+            selected_rotation = st.selectbox("Seleziona atleta", rotazioni, format_func=lambda x: x[1],
+                                             key="sel_atleta")
             punteggio = st.number_input(
                 "Punteggio", min_value=0.0, max_value=20.0, step=0.05, format="%.2f", key="punteggio"
             )
+
+            conferma_zero = False
+
+            # Controllo di conferma per punteggio zero
+            if punteggio == 0.0:
+                # Session key unico per atleta/attrezzo/rotazione
+                confirm_key = f"conferma_zero_{selected_rotation[0]}_{selected_attrezzo}_{rotazione_corrente}"
+                if st.session_state.get(confirm_key, False):
+                    conferma_zero = True
+                else:
+                    if st.form_submit_button("Invia punteggio"):
+                        st.session_state[confirm_key] = True
+                        st.warning("⚠️ Hai assegnato 0 punti. Premi di nuovo 'Invia punteggio' per confermare.")
+                        st.stop()
 
             if st.form_submit_button("Invia punteggio"):
                 rot_id = selected_rotation[0]
@@ -195,7 +211,7 @@ def show_giudice():
                             st.markdown(
                                 "<div style='background-color:#fff7e0; border-left: 6px solid #ffe066; border-radius:8px; padding:12px 10px; margin-bottom:10px;'>"
                                 "⚠️ <b>Hai assegnato <span style='color:#ba2020;'>0</span> punti.</b> "
-                                "Se l'atleta è assente o la prova è nulla, confermi il punteggio."
+                                "Se l'atleta è assente o la prova è nulla, hai confermato il punteggio."
                                 "</div>",
                                 unsafe_allow_html=True
                             )
@@ -205,6 +221,10 @@ def show_giudice():
                             f"</div>",
                             unsafe_allow_html=True
                         )
+                        # reset conferma_zero dopo salvataggio
+                        if punteggio == 0.0:
+                            st.session_state[confirm_key] = False
+
 
     finally:
         conn.close()
