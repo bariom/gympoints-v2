@@ -114,6 +114,7 @@ def show_admin():
                             c.execute("DELETE FROM judges WHERE id = ?", (judge_id,))
                             conn.commit()
                             st.success("Assegnazione eliminata con successo.")
+                            st.experimental_rerun()
                         else:
                             # Genera nuovo codice se cambia nome/cognome
                             code = genera_codice_giudice(new_name, new_surname)
@@ -123,6 +124,18 @@ def show_admin():
                             )
                             conn.commit()
                             st.success("Assegnazione aggiornata con successo.")
+                            # --- GENERA E MOSTRA IL QR CODE ---
+                            url_base = st.session_state.get("url_base", "https://gympoints.streamlit.app")
+                            giudice_key = f"{new_surname.strip().lower()}{code}"
+                            full_url = f"{url_base}/?giudice={giudice_key}"
+                            qr_img = qrcode.make(full_url)
+                            buf = io.BytesIO()
+                            qr_img.save(buf)
+                            buf.seek(0)
+                            st.markdown(f"#### Nuovo QR Code per {new_name} {new_surname} - Codice: {code}")
+                            st.image(buf, caption=full_url, width=250)
+                            st.info(
+                                "Se hai cambiato nome o cognome, comunica questo nuovo QR code e codice al giudice!")
         else:
             st.info("Nessuna assegnazione giudice-attrezzo da modificare.")
 
