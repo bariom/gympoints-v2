@@ -85,7 +85,7 @@ def show_admin():
 
         if selezione:
             name, surname, code = giudici_dict[selezione]
-            giudice_key = f"{surname.lower()}{code}"
+            giudice_key = f"{surname.strip().lower()}{code}"
             full_url = f"{url_base}/?giudice={giudice_key}"
             qr_img = qrcode.make(full_url)
             buf = io.BytesIO()
