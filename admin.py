@@ -115,6 +115,7 @@ def show_admin():
                             conn.commit()
                             st.success("Assegnazione eliminata con successo.")
                             st.experimental_rerun()
+                            return
                         else:
                             # Genera nuovo codice se cambia nome/cognome
                             code = genera_codice_giudice(new_name, new_surname)
