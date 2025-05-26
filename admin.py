@@ -14,7 +14,7 @@ def show_admin():
     conn = get_connection()
     c = conn.cursor()
 
-    tab1, tab2, tab3, tab4 = st.tabs(["Atleti", "Giudici", "Rotazioni", "Punteggi"])
+    tab1, tab2, tab3, tab4 = st.tabs(["Atleti", "Giudici", "Rotazioni", "Impostazioni"])
 
     with tab1:
         st.subheader("Gestione Atleti")
