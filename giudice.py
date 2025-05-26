@@ -12,9 +12,6 @@ def show_giudice():
             .main .block-container {padding-top: 1rem; max-width: 740px;}
             .stTable, .stDataFrame {background: #fcfcfc !important; border-radius: 12px;}
             .stAlert {border-radius: 12px;}
-            .highlight-valutato {background-color: #e1ffe1 !important;}
-            .highlight-da-valutare {background-color: #ffeedd !important;}
-            .highlight-0 {background-color: #ffeaea !important; color: #bb2222 !important;}
         </style>
     """, unsafe_allow_html=True)
 
@@ -84,7 +81,6 @@ def show_giudice():
             WHERE r.apparatus = ? AND r.rotation_order = ?
             ORDER BY r.id
         """, (selected_attrezzo, rotazione_corrente)).fetchall()
-        ids_in_rotazione = {row[0] for row in atleti_rotazione}
 
         # --- Punteggi già assegnati dal giudice ---
         punteggi_assegnati = c.execute("""
@@ -122,12 +118,28 @@ def show_giudice():
                 })
             df_all = pd.DataFrame(table)
 
+            # Funzione highlight corretta: usa solo CSS inline, non classi
             def highlight_row(row):
+                # Valutato e punteggio 0
                 if row["Stato"] == "Valutato":
-                    if str(row["Punteggio"]) == "0.0" or str(row["Punteggio"]) == "0":
-                        return ["highlight-0"] * 3  # Tutta la riga rossa se punteggio 0
-                    return ["highlight-valutato"] * 3
-                return ["highlight-da-valutare"] * 3
+                    p = str(row["Punteggio"]).replace(",", ".").strip()
+                    if p in {"0", "0.0"}:
+                        return [
+                            "background-color: #ffeaea; color: #bb2222; font-weight: 700;",
+                            "background-color: #ffeaea; color: #bb2222; font-weight: 700;",
+                            "background-color: #ffeaea; color: #bb2222; font-weight: 700;"
+                        ]
+                    return [
+                        "background-color: #e1ffe1;",
+                        "background-color: #e1ffe1;",
+                        "background-color: #e1ffe1;"
+                    ]
+                # Da valutare
+                return [
+                    "background-color: #ffeedd;",
+                    "background-color: #ffeedd;",
+                    "background-color: #ffeedd;"
+                ]
 
             st.markdown("### <span style='color: #235;'>Situazione atleti nella rotazione corrente</span>", unsafe_allow_html=True)
             st.dataframe(
@@ -195,12 +207,12 @@ def show_giudice():
                                 "</div>",
                                 unsafe_allow_html=True
                             )
-                            st.markdown(
-                                f"<div style='background-color:#e6f4ea; border-radius:8px; padding:14px 12px; border-left: 6px solid #3ca664; margin-bottom:10px;'>"
-                                f"<span style='font-size:1.1em;'>✅ Punteggio <b>{punteggio:.2f}</b> inserito per <b>{selected_rotation[1]}</b> su <b>{selected_attrezzo}</b>.</span>"
-                                f"</div>",
-                                unsafe_allow_html=True
-                            )
+                        st.markdown(
+                            f"<div style='background-color:#e6f4ea; border-radius:8px; padding:14px 12px; border-left: 6px solid #3ca664; margin-bottom:10px;'>"
+                            f"<span style='font-size:1.1em;'>✅ Punteggio <b>{punteggio:.2f}</b> inserito per <b>{selected_rotation[1]}</b> su <b>{selected_attrezzo}</b>.</span>"
+                            f"</div>",
+                            unsafe_allow_html=True
+                        )
 
     finally:
         conn.close()
