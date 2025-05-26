@@ -4,9 +4,9 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="580034fe-b43f-4fbd-a300-4d17bf8eba73" name="Changes" comment="Fix per conferma punteggio zero">
+    <list default="true" id="580034fe-b43f-4fbd-a300-4d17bf8eba73" name="Changes" comment="Possibilità di eliminare una rotazione completa">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/giudice.py" beforeDir="false" afterPath="$PROJECT_DIR$/giudice.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/admin.py" beforeDir="false" afterPath="$PROJECT_DIR$/admin.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -103,70 +103,6 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1747744575802</updated>
-    </task>
-    <task id="LOCAL-00091" summary="Fix classifica provvisoria sul live">
-      <option name="closed" value="true" />
-      <created>1747987204845</created>
-      <option name="number" value="00091" />
-      <option name="presentableId" value="LOCAL-00091" />
-      <option name="project" value="LOCAL" />
-      <updated>1747987204845</updated>
-    </task>
-    <task id="LOCAL-00092" summary="Fix classifica provvisoria sul live">
-      <option name="closed" value="true" />
-      <created>1747987284844</created>
-      <option name="number" value="00092" />
-      <option name="presentableId" value="LOCAL-00092" />
-      <option name="project" value="LOCAL" />
-      <updated>1747987284845</updated>
-    </task>
-    <task id="LOCAL-00093" summary="Fix classifica provvisoria sul live">
-      <option name="closed" value="true" />
-      <created>1747987551072</created>
-      <option name="number" value="00093" />
-      <option name="presentableId" value="LOCAL-00093" />
-      <option name="project" value="LOCAL" />
-      <updated>1747987551072</updated>
-    </task>
-    <task id="LOCAL-00094" summary="Fix classifica provvisoria sul live e Ranking">
-      <option name="closed" value="true" />
-      <created>1747989091593</created>
-      <option name="number" value="00094" />
-      <option name="presentableId" value="LOCAL-00094" />
-      <option name="project" value="LOCAL" />
-      <updated>1747989091593</updated>
-    </task>
-    <task id="LOCAL-00095" summary="Fix live, nome competizione">
-      <option name="closed" value="true" />
-      <created>1747989464007</created>
-      <option name="number" value="00095" />
-      <option name="presentableId" value="LOCAL-00095" />
-      <option name="project" value="LOCAL" />
-      <updated>1747989464007</updated>
-    </task>
-    <task id="LOCAL-00096" summary="Fix live, nome competizione">
-      <option name="closed" value="true" />
-      <created>1747989545416</created>
-      <option name="number" value="00096" />
-      <option name="presentableId" value="LOCAL-00096" />
-      <option name="project" value="LOCAL" />
-      <updated>1747989545416</updated>
-    </task>
-    <task id="LOCAL-00097" summary="Fix live, classifica provvisoria">
-      <option name="closed" value="true" />
-      <created>1747989783936</created>
-      <option name="number" value="00097" />
-      <option name="presentableId" value="LOCAL-00097" />
-      <option name="project" value="LOCAL" />
-      <updated>1747989783936</updated>
-    </task>
-    <task id="LOCAL-00098" summary="Fix live, classifica provvisoria">
-      <option name="closed" value="true" />
-      <created>1747990040632</created>
-      <option name="number" value="00098" />
-      <option name="presentableId" value="LOCAL-00098" />
-      <option name="project" value="LOCAL" />
-      <updated>1747990040632</updated>
     </task>
     <task id="LOCAL-00099" summary="Fix live, classifica provvisoria">
       <option name="closed" value="true" />
@@ -496,7 +432,71 @@
       <option name="project" value="LOCAL" />
       <updated>1748249334941</updated>
     </task>
-    <option name="localTasksCounter" value="140" />
+    <task id="LOCAL-00140" summary="Possibilità di modificare/cancellare l'assegnazione giudice-attrezzo">
+      <option name="closed" value="true" />
+      <created>1748257111153</created>
+      <option name="number" value="00140" />
+      <option name="presentableId" value="LOCAL-00140" />
+      <option name="project" value="LOCAL" />
+      <updated>1748257111153</updated>
+    </task>
+    <task id="LOCAL-00141" summary="Possibilità di modificare/cancellare l'assegnazione giudice-attrezzo">
+      <option name="closed" value="true" />
+      <created>1748258661838</created>
+      <option name="number" value="00141" />
+      <option name="presentableId" value="LOCAL-00141" />
+      <option name="project" value="LOCAL" />
+      <updated>1748258661838</updated>
+    </task>
+    <task id="LOCAL-00142" summary="Possibilità di modificare/cancellare l'assegnazione giudice-attrezzo">
+      <option name="closed" value="true" />
+      <created>1748258805357</created>
+      <option name="number" value="00142" />
+      <option name="presentableId" value="LOCAL-00142" />
+      <option name="project" value="LOCAL" />
+      <updated>1748258805357</updated>
+    </task>
+    <task id="LOCAL-00143" summary="Possibilità di modificare/cancellare l'assegnazione giudice-attrezzo">
+      <option name="closed" value="true" />
+      <created>1748259211051</created>
+      <option name="number" value="00143" />
+      <option name="presentableId" value="LOCAL-00143" />
+      <option name="project" value="LOCAL" />
+      <updated>1748259211051</updated>
+    </task>
+    <task id="LOCAL-00144" summary="Possibilità di modificare/cancellare l'assegnazione giudice-attrezzo">
+      <option name="closed" value="true" />
+      <created>1748259423120</created>
+      <option name="number" value="00144" />
+      <option name="presentableId" value="LOCAL-00144" />
+      <option name="project" value="LOCAL" />
+      <updated>1748259423120</updated>
+    </task>
+    <task id="LOCAL-00145" summary="Possibilità di modificare/cancellare l'assegnazione giudice-attrezzo">
+      <option name="closed" value="true" />
+      <created>1748259577117</created>
+      <option name="number" value="00145" />
+      <option name="presentableId" value="LOCAL-00145" />
+      <option name="project" value="LOCAL" />
+      <updated>1748259577117</updated>
+    </task>
+    <task id="LOCAL-00146" summary="Possibilità di eliminare una rotazione completa">
+      <option name="closed" value="true" />
+      <created>1748259794961</created>
+      <option name="number" value="00146" />
+      <option name="presentableId" value="LOCAL-00146" />
+      <option name="project" value="LOCAL" />
+      <updated>1748259794961</updated>
+    </task>
+    <task id="LOCAL-00147" summary="Possibilità di eliminare una rotazione completa">
+      <option name="closed" value="true" />
+      <created>1748259888386</created>
+      <option name="number" value="00147" />
+      <option name="presentableId" value="LOCAL-00147" />
+      <option name="project" value="LOCAL" />
+      <updated>1748259888386</updated>
+    </task>
+    <option name="localTasksCounter" value="148" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -511,8 +511,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="Lista dei punteggi assegnati nella pagina giudice" />
-    <MESSAGE value="Rivisto il metodo di punteggio.&#10;Dopo confronto con Davide Rusca che mi ha spiegato che in gara i giudici discutono i punteggi e ne comunicano uno solo di comune accordo, ho tolto il calcolo della media e si accetta direttamente il singolo punteggio." />
     <MESSAGE value="Fix errore tecnico in live" />
     <MESSAGE value="Fix errore tecnico in ranking" />
     <MESSAGE value="Fix per filtrare gli atleti con punteggio già assegnato in pannello giudice." />
@@ -536,6 +534,8 @@
     <MESSAGE value="Inserito parametro per bloccare l'accesso al ranking finale" />
     <MESSAGE value="Fix per classifica provvisoria" />
     <MESSAGE value="Fix per conferma punteggio zero" />
-    <option name="LAST_COMMIT_MESSAGE" value="Fix per conferma punteggio zero" />
+    <MESSAGE value="Possibilità di modificare/cancellare l'assegnazione giudice-attrezzo" />
+    <MESSAGE value="Possibilità di eliminare una rotazione completa" />
+    <option name="LAST_COMMIT_MESSAGE" value="Possibilità di eliminare una rotazione completa" />
   </component>
 </project>
