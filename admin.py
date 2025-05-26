@@ -74,6 +74,57 @@ def show_admin():
             c.execute("SELECT name, surname, apparatus, code FROM judges").fetchall(),
             use_container_width=True
         )
+        # --- MODIFICA o ELIMINA assegnazione giudice-attrezzo ---
+        st.markdown("### Modifica o elimina assegnazione giudice-attrezzo")
+
+        # Recupera tutte le assegnazioni
+        assegnazioni = c.execute(
+            "SELECT id, name, surname, apparatus, code FROM judges ORDER BY surname, name, apparatus"
+        ).fetchall()
+
+        if assegnazioni:
+            labels = [
+                f"{row[1]} {row[2]} – {row[3]} [codice: {row[4]}]" for row in assegnazioni
+            ]
+            id_map = {label: row[0] for label, row in zip(labels, assegnazioni)}
+
+            selected_label = st.selectbox(
+                "Seleziona un’assegnazione da modificare o eliminare",
+                labels,
+                key="edit_judge_assign"
+            )
+            if selected_label:
+                judge_id = id_map[selected_label]
+                # Prendi i dettagli correnti
+                current_row = next(row for row in assegnazioni if row[0] == judge_id)
+                nome_corr, cognome_corr, apparatus_corr = current_row[1], current_row[2], current_row[3]
+
+                with st.form("form_edit_judge_assign"):
+                    new_name = st.text_input("Nome", value=nome_corr)
+                    new_surname = st.text_input("Cognome", value=cognome_corr)
+                    new_apparatus = st.selectbox("Attrezzo",
+                                                 ["Suolo", "Cavallo a maniglie", "Anelli", "Volteggio", "Parallele",
+                                                  "Sbarra"],
+                                                 index=["Suolo", "Cavallo a maniglie", "Anelli", "Volteggio",
+                                                        "Parallele", "Sbarra"].index(apparatus_corr))
+                    delete = st.checkbox("Elimina questa assegnazione")
+                    submitted = st.form_submit_button("Applica modifiche")
+                    if submitted:
+                        if delete:
+                            c.execute("DELETE FROM judges WHERE id = ?", (judge_id,))
+                            conn.commit()
+                            st.success("Assegnazione eliminata con successo.")
+                        else:
+                            # Genera nuovo codice se cambia nome/cognome
+                            code = genera_codice_giudice(new_name, new_surname)
+                            c.execute(
+                                "UPDATE judges SET name = ?, surname = ?, apparatus = ?, code = ? WHERE id = ?",
+                                (new_name, new_surname, new_apparatus, code, judge_id)
+                            )
+                            conn.commit()
+                            st.success("Assegnazione aggiornata con successo.")
+        else:
+            st.info("Nessuna assegnazione giudice-attrezzo da modificare.")
 
         st.markdown("### QR Code di accesso giudici")
         url_base = st.text_input("URL base dell'applicazione", value=st.session_state.get("url_base", "https://gympoints.streamlit.app"))
