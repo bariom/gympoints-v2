@@ -6,66 +6,68 @@ from streamlit_autorefresh import st_autorefresh
 def show_live():
     st_autorefresh(interval=2000, key="refresh_live")
 
+    MIN_HEIGHT = 210  # Altezza minima per ogni box attrezzo (regolabile!)
+
     st.markdown("""
         <style>
         .main .block-container {padding-top: 0.5rem; max-width: 1400px;}
         .attrezzo-header {
-            background: #003366;
+            background: #002d5d;
             color: #fff;
             text-align: center;
-            padding: 10px 0 10px 0;
-            font-size: 2.2rem;
+            padding: 16px 0 10px 0;
+            font-size: 2.1rem;
             font-weight: 900;
             letter-spacing: 2px;
-            border-radius: 9px;
-            margin-bottom: 8px;
+            border-radius: 15px;
+            margin-bottom: 6px;
+            margin-top: 8px;
+            min-height: 68px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        .attrezzo-content {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 120px;
         }
         .atleta-name {
             text-align: center;
-            font-size: 2.1rem;
+            font-size: 2.05rem;
             font-weight: 800;
             color: #111;
-            letter-spacing: 1.5px;
-            margin: 22px 0 12px 0;
+            letter-spacing: 1.2px;
+            margin: 15px 0 10px 0;
             text-transform: uppercase;
         }
         .score-show {
             text-align: center;
-            font-size: 3.4rem;
+            font-size: 3.2rem;
             font-weight: 900;
             color: #16bb50;
             text-shadow: 0 2px 8px #d8ffe8;
-            margin-bottom: 15px;
+            margin-bottom: 10px;
         }
         .score-pending {
             text-align: center;
-            font-size: 1.7rem;
+            font-size: 1.35rem;
             color: #fa9900;
             font-weight: 800;
-            margin-bottom: 15px;
+            margin-bottom: 12px;
         }
         .done-rot {
             text-align: center;
             background: #eaffea;
             color: #0a5d0a;
-            font-size: 1.32rem;
+            font-size: 1.20rem;
             border-radius: 9px;
-            padding: 9px 0 7px 0;
-            margin-top: 22px;
-        }
-        .classifica-title {
-            text-align: center;
-            color: #003366;
-            font-size: 1.3rem;
-            font-weight: 800;
-            letter-spacing: 1px;
-            margin-bottom: 10px;
+            padding: 8px 0 6px 0;
             margin-top: 18px;
         }
-        .classifica-row {font-size: 1.25rem; font-weight: 700;}
-        .podio1 {color: #d6af36;}
-        .podio2 {color: #b4b4b4;}
-        .podio3 {color: #c97a41;}
         </style>
     """, unsafe_allow_html=True)
 
@@ -108,7 +110,11 @@ def show_live():
 
     for i, attrezzo in enumerate(attrezzi):
         col = col_map[i]
-        col.markdown(f"<div class='attrezzo-header'>{attrezzo}</div>", unsafe_allow_html=True)
+        # Box titolo attrezzo
+        col.markdown(f"<div class='attrezzo-header' style='min-height:58px'>{attrezzo}</div>", unsafe_allow_html=True)
+
+        # Box contenuto attrezzo con min-height fissa per allineamento verticale
+        col.markdown(f"<div class='attrezzo-content' style='min-height:{MIN_HEIGHT}px'>", unsafe_allow_html=True)
 
         atleti = c.execute("""
             SELECT a.id, a.name || ' ' || a.surname AS nome
@@ -120,6 +126,7 @@ def show_live():
 
         if not atleti:
             col.markdown("<div class='score-pending' style='color:#226;'>Nessun atleta assegnato.</div>", unsafe_allow_html=True)
+            col.markdown("</div>", unsafe_allow_html=True)
             continue
 
         key_prog = f"{attrezzo}_index_{rotazione_corrente}"
@@ -127,6 +134,7 @@ def show_live():
 
         if index >= len(atleti):
             col.markdown("<div class='done-rot'>✅ Tutti gli atleti hanno completato la rotazione.</div>", unsafe_allow_html=True)
+            col.markdown("</div>", unsafe_allow_html=True)
             continue
 
         tutti_attrezzi_completati = False
@@ -152,56 +160,11 @@ def show_live():
         else:
             col.markdown("<div class='score-pending'>⏳ In attesa del punteggio...</div>", unsafe_allow_html=True)
 
+        col.markdown("</div>", unsafe_allow_html=True)
+
     if tutti_attrezzi_completati:
         st.markdown("<div class='done-rot'>Tutti gli attrezzi hanno completato la rotazione.<br>Attendere l'avanzamento manuale.</div>", unsafe_allow_html=True)
 
-    # Mostra classifica provvisoria
-    if show_ranking_active:
-        col_classifica.markdown("<div class='classifica-title'>Classifica provvisoria</div>", unsafe_allow_html=True)
-        classifica = c.execute("""
-            SELECT 
-                a.name || ' ' || a.surname AS nome,
-                a.club AS club,
-                SUM(s.score) AS totale
-            FROM scores s
-            JOIN athletes a ON a.id = s.athlete_id
-            GROUP BY s.athlete_id
-            ORDER BY totale DESC
-        """).fetchall()
-
-        posizione = 1
-        posizione_effettiva = 1
-        punteggio_precedente = None
-        skip_count = 0
-
-        for i, (nome, club, totale) in enumerate(classifica[:20], start=1):
-            if punteggio_precedente is not None:
-                if totale == punteggio_precedente:
-                    skip_count += 1
-                else:
-                    if usa_logica_olimpica:
-                        posizione_effettiva = posizione
-                        skip_count = 1
-                    else:
-                        posizione_effettiva += 1
-            else:
-                skip_count = 1
-
-            # Colori podio
-            podio = ""
-            if posizione_effettiva == 1:
-                podio = "podio1"
-            elif posizione_effettiva == 2:
-                podio = "podio2"
-            elif posizione_effettiva == 3:
-                podio = "podio3"
-
-            col_classifica.markdown(
-                f"<div class='classifica-row {podio}'>{posizione_effettiva}. <b>{nome}</b> — <span style='font-size:1.3em'>{totale:.3f}</span><br><span style='font-size:0.95em;font-weight:400'>{club}</span></div>",
-                unsafe_allow_html=True
-            )
-
-            punteggio_precedente = totale
-            posizione += 1
+    # (Classifica provvisoria se necessario, puoi inserire qui sotto)
 
     conn.close()
