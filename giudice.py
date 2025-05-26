@@ -95,9 +95,8 @@ def show_giudice():
             ORDER BY Atleta
         """, (giudice_id, selected_attrezzo, selected_attrezzo, rotazione_corrente)).fetchall()
 
-        # --- Costruzione DataFrame con badge e highlight ---
+        # --- Costruzione DataFrame "pulita" con badge simbolici e highlight ---
         if atleti_rotazione:
-            # Atleti già valutati
             id_valutati = {row[0] for row in punteggi_assegnati}
             nomi_valutati = {row[1]: row[3] for row in punteggi_assegnati}  # nome: punteggio
 
@@ -105,66 +104,16 @@ def show_giudice():
             for athlete_id, nome_atleta in atleti_rotazione:
                 stato = "Valutato" if athlete_id in id_valutati else "Da valutare"
                 punteggio = nomi_valutati.get(nome_atleta, "")
-                badge = (
-                    f"<span style='background:#e1ffe1; color:#228833; border-radius:4px; padding:2px 8px;'>Valutato</span>"
-                    if stato == "Valutato"
-                    else
-                    f"<span style='background:#ffeedd; color:#b8860b; border-radius:4px; padding:2px 8px;'>Da valutare</span>"
-                )
-                # --- Costruzione DataFrame con badge simbolico e highlight ---
-                if atleti_rotazione:
-                    id_valutati = {row[0] for row in punteggi_assegnati}
-                    nomi_valutati = {row[1]: row[3] for row in punteggi_assegnati}  # nome: punteggio
-
-                    table = []
-                    for athlete_id, nome_atleta in atleti_rotazione:
-                        stato = "Valutato" if athlete_id in id_valutati else "Da valutare"
-                        punteggio = nomi_valutati.get(nome_atleta, "")
-                        table.append({
-                            "Atleta": nome_atleta,
-                            "Punteggio": punteggio if punteggio != "" else "-",
-                            "Stato": "✓ Valutato" if stato == "Valutato" else "⏳ Da valutare"
-                        })
-                    df_all = pd.DataFrame(table)
-
-                    def highlight_row(row):
-                        # Valutato e punteggio 0
-                        if "Valutato" in row["Stato"]:
-                            p = str(row["Punteggio"]).replace(",", ".").strip()
-                            if p in {"0", "0.0"}:
-                                return [
-                                    "background-color: #ffeaea; color: #bb2222; font-weight: 700;",
-                                    "background-color: #ffeaea; color: #bb2222; font-weight: 700;",
-                                    "background-color: #ffeaea; color: #bb2222; font-weight: 700;"
-                                ]
-                            return [
-                                "background-color: #e1ffe1;",
-                                "background-color: #e1ffe1;",
-                                "background-color: #e1ffe1;"
-                            ]
-                        # Da valutare
-                        return [
-                            "background-color: #ffeedd;",
-                            "background-color: #ffeedd;",
-                            "background-color: #ffeedd;"
-                        ]
-
-                    st.markdown("### <span style='color: #235;'>Situazione atleti nella rotazione corrente</span>",
-                                unsafe_allow_html=True)
-                    st.dataframe(
-                        df_all.style.apply(highlight_row, axis=1),
-                        use_container_width=True,
-                        hide_index=True,
-                    )
-                else:
-                    st.info("Nessun atleta assegnato per questa rotazione.")
-
+                table.append({
+                    "Atleta": nome_atleta,
+                    "Punteggio": punteggio if punteggio != "" else "-",
+                    "Stato": "✓ Valutato" if stato == "Valutato" else "⏳ Da valutare"
+                })
             df_all = pd.DataFrame(table)
 
-            # Funzione highlight corretta: usa solo CSS inline, non classi
             def highlight_row(row):
                 # Valutato e punteggio 0
-                if row["Stato"] == "Valutato":
+                if "Valutato" in row["Stato"]:
                     p = str(row["Punteggio"]).replace(",", ".").strip()
                     if p in {"0", "0.0"}:
                         return [
