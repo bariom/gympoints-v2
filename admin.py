@@ -58,6 +58,7 @@ def show_admin():
     with tab2:
         st.subheader("Gestione Giudici")
 
+        # --- AGGIUNTA NUOVO GIUDICE ---
         with st.form("add_judge"):
             name = st.text_input("Nome Giudice")
             surname = st.text_input("Cognome Giudice")
@@ -69,11 +70,15 @@ def show_admin():
                           (name, surname, apparatus, code))
                 conn.commit()
                 st.success(f"Giudice aggiunto. Codice accesso: {code}")
+                st.experimental_rerun()
+                return
 
+        # --- TABELLA GIUDICI ---
         st.dataframe(
             c.execute("SELECT name, surname, apparatus, code FROM judges").fetchall(),
             use_container_width=True
         )
+
         # --- MODIFICA o ELIMINA assegnazione giudice-attrezzo ---
         st.markdown("### Modifica o elimina assegnazione giudice-attrezzo")
 
@@ -125,23 +130,15 @@ def show_admin():
                             )
                             conn.commit()
                             st.success("Assegnazione aggiornata con successo.")
-                            # --- GENERA E MOSTRA IL QR CODE ---
-                            url_base = st.session_state.get("url_base", "https://gympoints.streamlit.app")
-                            giudice_key = f"{new_surname.strip().lower()}{code}"
-                            full_url = f"{url_base}/?giudice={giudice_key}"
-                            qr_img = qrcode.make(full_url)
-                            buf = io.BytesIO()
-                            qr_img.save(buf)
-                            buf.seek(0)
-                            st.markdown(f"#### Nuovo QR Code per {new_name} {new_surname} - Codice: {code}")
-                            st.image(buf, caption=full_url, width=250)
-                            st.info(
-                                "Se hai cambiato nome o cognome, comunica questo nuovo QR code e codice al giudice!")
+                            st.experimental_rerun()
+                            return
         else:
             st.info("Nessuna assegnazione giudice-attrezzo da modificare.")
 
+        # --- QR CODE GIUDICI (visualizzazione manuale) ---
         st.markdown("### QR Code di accesso giudici")
-        url_base = st.text_input("URL base dell'applicazione", value=st.session_state.get("url_base", "https://gympoints.streamlit.app"))
+        url_base = st.text_input("URL base dell'applicazione",
+                                 value=st.session_state.get("url_base", "https://gympoints.streamlit.app"))
         st.session_state["url_base"] = url_base
 
         giudici = c.execute("SELECT name, surname, code FROM judges").fetchall()
