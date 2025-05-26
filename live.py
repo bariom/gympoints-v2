@@ -42,6 +42,7 @@ def show_live():
     logica_classifica = c.execute("SELECT value FROM state WHERE key = 'logica_classifica'").fetchone()
     usa_logica_olimpica = logica_classifica and logica_classifica[0] == "olimpica"
 
+    # Colonne per 6 attrezzi + eventualmente classifica provvisoria
     if show_ranking_active:
         col1, col2, col3, col4 = st.columns([1, 1, 1, 1])
         col_map = [col1, col2, col3, col1, col2, col3]
@@ -49,7 +50,7 @@ def show_live():
     else:
         col1, col2, col3 = st.columns([1, 1, 1])
         col_map = [col1, col2, col3, col1, col2, col3]
-        col_classifica = col3
+        col_classifica = None
 
     now = time.time()
     if "progresso_live" not in st.session_state:
@@ -144,6 +145,48 @@ def show_live():
             unsafe_allow_html=True
         )
 
-    # (Classifica provvisoria se necessario, puoi inserire qui sotto)
+    # --- CLASSIFICA PROVVISORIA (corretto) ---
+    if show_ranking_active and col_classifica:
+        col_classifica.markdown("<h4 style='text-align: center;'>Classifica provvisoria</h4>", unsafe_allow_html=True)
+
+        classifica = c.execute("""
+            SELECT 
+                a.name || ' ' || a.surname AS nome,
+                a.club AS club,
+                SUM(s.score) AS totale
+            FROM scores s
+            JOIN athletes a ON a.id = s.athlete_id
+            GROUP BY s.athlete_id
+            ORDER BY totale DESC
+        """).fetchall()
+
+        if not classifica:
+            col_classifica.warning("Nessun punteggio disponibile per la classifica.")
+        else:
+            posizione = 1
+            posizione_effettiva = 1
+            punteggio_precedente = None
+            skip_count = 0
+
+            for i, (nome, club, totale) in enumerate(classifica[:20], start=1):
+                if punteggio_precedente is not None:
+                    if totale == punteggio_precedente:
+                        skip_count += 1
+                    else:
+                        if usa_logica_olimpica:
+                            posizione_effettiva = posizione
+                            skip_count = 1
+                        else:
+                            posizione_effettiva += 1
+                else:
+                    skip_count = 1
+
+                col_classifica.markdown(
+                    f"<div style='font-size:16px;'>{posizione_effettiva}. <b>{nome} — {totale:.3f}</b><br/><i>{club}</i></div>",
+                    unsafe_allow_html=True
+                )
+
+                punteggio_precedente = totale
+                posizione += 1
 
     conn.close()
