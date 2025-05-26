@@ -71,7 +71,7 @@ def show_admin():
                           (name, surname, apparatus, code))
                 conn.commit()
                 st.success(f"Giudice aggiunto. Codice accesso: {code}")
-                st.experimental_rerun()
+                st.rerun()
                 return
 
         # --- TABELLA GIUDICI ---
@@ -89,7 +89,6 @@ def show_admin():
         ).fetchall()
 
         if assegnazioni:
-            # Chiave dinamica per la selectbox in base a quanti giudici ho
             select_key = f"edit_judge_assign_{len(assegnazioni)}"
             labels = [
                 f"{row[1]} {row[2]} – {row[3]} [codice: {row[4]}]" for row in assegnazioni
@@ -107,7 +106,6 @@ def show_admin():
                 current_row = next(row for row in assegnazioni if row[0] == judge_id)
                 nome_corr, cognome_corr, apparatus_corr = current_row[1], current_row[2], current_row[3]
 
-                # Chiave dinamica per la form di modifica
                 form_key = f"form_edit_judge_assign_{judge_id}"
                 with st.form(form_key):
                     new_name = st.text_input("Nome", value=nome_corr)
@@ -125,10 +123,9 @@ def show_admin():
                             c.execute("DELETE FROM judges WHERE id = ?", (judge_id,))
                             conn.commit()
                             st.success("Assegnazione eliminata con successo.")
-                            st.experimental_rerun()
+                            st.rerun()
                             return
                         else:
-                            # Genera nuovo codice se cambia nome/cognome
                             code = genera_codice_giudice(new_name, new_surname)
                             c.execute(
                                 "UPDATE judges SET name = ?, surname = ?, apparatus = ?, code = ? WHERE id = ?",
@@ -136,7 +133,7 @@ def show_admin():
                             )
                             conn.commit()
                             st.success("Assegnazione aggiornata con successo.")
-                            st.experimental_rerun()
+                            st.rerun()
                             return
         else:
             st.info("Nessuna assegnazione giudice-attrezzo da modificare.")
@@ -147,7 +144,6 @@ def show_admin():
                                  value=st.session_state.get("url_base", "https://gympoints.streamlit.app"))
         st.session_state["url_base"] = url_base
 
-        # Chiave dinamica per la selectbox dei QR
         giudici = c.execute("SELECT name, surname, code FROM judges").fetchall()
         giudici_dict = {f"{name} {surname} [{code}]": (name, surname, code) for name, surname, code in giudici}
         select_qr_key = f"select_qr_{len(giudici)}"
