@@ -67,7 +67,11 @@ def show_giudice():
             )
         else:
             selected_attrezzo = attrezzi_lista[0]
-            st.info(f"Attrezzo assegnato: <b>{selected_attrezzo}</b>", icon="🛠️", unsafe_allow_html=True)
+            st.markdown(
+                f"<div style='background-color:#eef6fb; border-left: 4px solid #59a3d6; border-radius:8px; padding:8px; margin-bottom:12px;'>"
+                f"🛠️ <b>Attrezzo assegnato:</b> {selected_attrezzo}</div>",
+                unsafe_allow_html=True
+            )
 
         # Rotazione corrente
         rotazione_corrente = int(c.execute("SELECT value FROM state WHERE key = 'rotazione_corrente'").fetchone()[0])
@@ -148,9 +152,11 @@ def show_giudice():
         """, (selected_attrezzo, rotazione_corrente, giudice_id, selected_attrezzo)).fetchall()
 
         if not rotazioni:
-            st.success(
-                f"Hai già valutato tutti gli atleti su <b>{selected_attrezzo}</b> in questa rotazione! 👏",
-                icon="✅", unsafe_allow_html=True
+            st.markdown(
+                f"<div style='background-color:#e6f4ea; border-radius:8px; padding:14px 12px; border-left: 6px solid #3ca664; margin-bottom:16px;'>"
+                f"<span style='font-size:1.1em;'>✅ Hai già valutato tutti gli atleti su <b>{selected_attrezzo}</b> in questa rotazione! 👏</span>"
+                f"</div>",
+                unsafe_allow_html=True
             )
             return
 
@@ -182,14 +188,19 @@ def show_giudice():
                         """, (selected_attrezzo, atleta_id, giudice_id, punteggio))
                         conn.commit()
                         if punteggio == 0.0:
-                            st.warning(
-                                f"Hai assegnato <b>0</b> punti. "
-                                f"Se l'atleta è assente o la prova è nulla, confermi il punteggio.",
-                                icon="⚠️", unsafe_allow_html=True
+                            st.markdown(
+                                "<div style='background-color:#fff7e0; border-left: 6px solid #ffe066; border-radius:8px; padding:12px 10px; margin-bottom:10px;'>"
+                                "⚠️ <b>Hai assegnato <span style='color:#ba2020;'>0</span> punti.</b> "
+                                "Se l'atleta è assente o la prova è nulla, confermi il punteggio."
+                                "</div>",
+                                unsafe_allow_html=True
                             )
-                        st.success(
-                            f"Punteggio <b>{punteggio:.2f}</b> inserito per <b>{selected_rotation[1]}</b> su <b>{selected_attrezzo}</b>.",
-                            icon="✅", unsafe_allow_html=True
-                        )
+                            st.markdown(
+                                f"<div style='background-color:#e6f4ea; border-radius:8px; padding:14px 12px; border-left: 6px solid #3ca664; margin-bottom:10px;'>"
+                                f"<span style='font-size:1.1em;'>✅ Punteggio <b>{punteggio:.2f}</b> inserito per <b>{selected_rotation[1]}</b> su <b>{selected_attrezzo}</b>.</span>"
+                                f"</div>",
+                                unsafe_allow_html=True
+                            )
+
     finally:
         conn.close()
