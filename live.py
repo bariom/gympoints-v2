@@ -13,12 +13,13 @@ def show_live():
             background: #f6fbff;
             border: 3px solid #0074c7;
             border-radius: 22px;
-            min-height: 175px;
+            min-height: 160px;
             margin-bottom: 32px;
-            margin-top: 16px;
+            margin-top: 10px;
             box-shadow: 0 4px 18px #b2d8ff44;
             padding: 14px 4px 18px 4px;
             text-align: center;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
         }
         .attrezzo-label {
             background: #0074c7;
@@ -77,8 +78,8 @@ def show_live():
 
     attrezzi = ["Suolo", "Cavallo a maniglie", "Anelli", "Volteggio", "Parallele", "Sbarra"]
 
-    # 2 colonne x 3 righe
-    grid = [attrezzi[:2], attrezzi[2:4], attrezzi[4:]]
+    # Costruisci una lista di 6 attrezzi per la griglia 2x3
+    grid = [attrezzi[i:i+2] for i in range(0, len(attrezzi), 2)]
     now = time.time()
     if "progresso_live" not in st.session_state:
         st.session_state["progresso_live"] = {}
@@ -87,51 +88,56 @@ def show_live():
 
     for riga in grid:
         cols = st.columns(2, gap="large")
-        for i, attrezzo in enumerate(riga):
-            with cols[i]:
-                st.markdown('<div class="attrezzo-box">', unsafe_allow_html=True)
-                st.markdown(f'<div class="attrezzo-label">{attrezzo}</div>', unsafe_allow_html=True)
-                atleti = c.execute("""
-                    SELECT a.id, a.name || ' ' || a.surname AS nome
-                    FROM rotations r
-                    JOIN athletes a ON a.id = r.athlete_id
-                    WHERE r.apparatus = ? AND r.rotation_order = ?
-                    ORDER BY r.id
-                """, (attrezzo, rotazione_corrente)).fetchall()
+        for i in range(2):
+            if i < len(riga):
+                attrezzo = riga[i]
+                with cols[i]:
+                    st.markdown('<div class="attrezzo-box">', unsafe_allow_html=True)
+                    st.markdown(f'<div class="attrezzo-label">{attrezzo}</div>', unsafe_allow_html=True)
+                    atleti = c.execute("""
+                        SELECT a.id, a.name || ' ' || a.surname AS nome
+                        FROM rotations r
+                        JOIN athletes a ON a.id = r.athlete_id
+                        WHERE r.apparatus = ? AND r.rotation_order = ?
+                        ORDER BY r.id
+                    """, (attrezzo, rotazione_corrente)).fetchall()
 
-                if not atleti:
-                    st.markdown('<div class="empty-assign">Nessun atleta assegnato.</div>', unsafe_allow_html=True)
-                    st.markdown('</div>', unsafe_allow_html=True)
-                    continue
+                    if not atleti:
+                        st.markdown('<div class="empty-assign">Nessun atleta assegnato.</div>', unsafe_allow_html=True)
+                        st.markdown('</div>', unsafe_allow_html=True)
+                        continue
 
-                key_prog = f"{attrezzo}_index_{rotazione_corrente}"
-                index = st.session_state["progresso_live"].get(key_prog, 0)
+                    key_prog = f"{attrezzo}_index_{rotazione_corrente}"
+                    index = st.session_state["progresso_live"].get(key_prog, 0)
 
-                if index >= len(atleti):
-                    st.markdown('<div class="score-pending" style="color:#229933;">Tutti completato!</div>', unsafe_allow_html=True)
-                    st.markdown('</div>', unsafe_allow_html=True)
-                    continue
+                    if index >= len(atleti):
+                        st.markdown('<div class="score-pending" style="color:#229933;">Tutti completato!</div>', unsafe_allow_html=True)
+                        st.markdown('</div>', unsafe_allow_html=True)
+                        continue
 
-                atleta_id, nome = atleti[index]
-                st.markdown(f'<div class="atleta-name">{nome}</div>', unsafe_allow_html=True)
+                    atleta_id, nome = atleti[index]
+                    st.markdown(f'<div class="atleta-name">{nome}</div>', unsafe_allow_html=True)
 
-                score_row = c.execute("""
-                    SELECT score FROM scores 
-                    WHERE athlete_id = ? AND apparatus = ?
-                """, (atleta_id, attrezzo)).fetchone()
+                    score_row = c.execute("""
+                        SELECT score FROM scores 
+                        WHERE athlete_id = ? AND apparatus = ?
+                    """, (atleta_id, attrezzo)).fetchone()
 
-                if score_row:
-                    punteggio = round(score_row[0], 3)
-                    timer_key = f"{attrezzo}_{atleta_id}_{rotazione_corrente}"
-                    shown_at = st.session_state["score_timers"].get(timer_key)
-                    if shown_at is None:
-                        st.session_state["score_timers"][timer_key] = now
-                    if now - st.session_state["score_timers"][timer_key] < 20:
-                        st.markdown(f'<div class="score-ok">{punteggio:.3f}</div>', unsafe_allow_html=True)
+                    if score_row:
+                        punteggio = round(score_row[0], 3)
+                        timer_key = f"{attrezzo}_{atleta_id}_{rotazione_corrente}"
+                        shown_at = st.session_state["score_timers"].get(timer_key)
+                        if shown_at is None:
+                            st.session_state["score_timers"][timer_key] = now
+                        if now - st.session_state["score_timers"][timer_key] < 20:
+                            st.markdown(f'<div class="score-ok">{punteggio:.3f}</div>', unsafe_allow_html=True)
+                        else:
+                            st.session_state["progresso_live"][key_prog] = index + 1
                     else:
-                        st.session_state["progresso_live"][key_prog] = index + 1
-                else:
-                    st.markdown('<div class="score-pending">⏳ In attesa del punteggio...</div>', unsafe_allow_html=True)
-                st.markdown('</div>', unsafe_allow_html=True)
+                        st.markdown('<div class="score-pending">⏳ In attesa del punteggio...</div>', unsafe_allow_html=True)
+                    st.markdown('</div>', unsafe_allow_html=True)
+            else:
+                # Colonna vuota: non mostrare nulla, NON aggiungere nessun box!
+                pass
 
     conn.close()
