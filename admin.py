@@ -178,6 +178,21 @@ def show_admin():
                 conn.commit()
                 st.success("Rotazione aggiunta correttamente")
 
+
+
+        st.markdown("### Elenco rotazioni")
+        rot_table = c.execute("""
+            SELECT 
+                r.id AS ID,
+                r.apparatus AS Attrezzo,
+                a.name || ' ' || a.surname AS Atleta,
+                r.rotation_order AS Ordine
+            FROM rotations r
+            JOIN athletes a ON a.id = r.athlete_id
+            ORDER BY r.rotation_order, r.apparatus, r.id
+        """).fetchall()
+        st.dataframe(rot_table, use_container_width=True)
+
         st.markdown("### Modifica o elimina rotazione esistente")
         rotation_rows = c.execute(
             "SELECT r.id, a.name || ' ' || a.surname || ' - ' || r.apparatus FROM rotations r JOIN athletes a ON a.id = r.athlete_id ORDER BY r.rotation_order, r.apparatus").fetchall()
@@ -206,19 +221,6 @@ def show_admin():
                         conn.commit()
         else:
             st.info("Nessuna rotazione disponibile da modificare.")
-
-        st.markdown("### Elenco rotazioni")
-        rot_table = c.execute("""
-            SELECT 
-                r.id AS ID,
-                r.apparatus AS Attrezzo,
-                a.name || ' ' || a.surname AS Atleta,
-                r.rotation_order AS Ordine
-            FROM rotations r
-            JOIN athletes a ON a.id = r.athlete_id
-            ORDER BY r.rotation_order, r.apparatus, r.id
-        """).fetchall()
-        st.dataframe(rot_table, use_container_width=True)
 
         st.markdown("### Elimina intera rotazione")
 
