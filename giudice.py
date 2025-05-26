@@ -1,126 +1,194 @@
 import streamlit as st
 import pandas as pd
 from db import get_connection
+from streamlit_autorefresh import st_autorefresh
 
 def show_giudice():
-    st.title("Pannello Giudice")
+    # Autorefresh ogni 10 secondi (10000 ms)
+    st_autorefresh(interval=10000, key="refresh_giudice")
+
+    st.markdown("""
+        <style>
+            .main .block-container {padding-top: 1rem; max-width: 740px;}
+            .stTable, .stDataFrame {background: #fcfcfc !important; border-radius: 12px;}
+            .stAlert {border-radius: 12px;}
+            .highlight-valutato {background-color: #e1ffe1 !important;}
+            .highlight-da-valutare {background-color: #ffeedd !important;}
+            .highlight-0 {background-color: #ffeaea !important; color: #bb2222 !important;}
+        </style>
+    """, unsafe_allow_html=True)
+
+    st.markdown("<h2 style='text-align: center; color: #003366;'>Pannello Giudice</h2>", unsafe_allow_html=True)
 
     params = st.query_params
     codice_param = params.get("giudice", "").strip()
 
-    if not codice_param or len(codice_param) < 5:
+    if not codice_param or len(codice_param) < 5 or not codice_param[-4:].isdigit():
         st.error("Accesso non valido. Assicurati che il link contenga il parametro corretto.")
         return
 
-    cognome = codice_param[:-4].lower()
+    cognome_url = codice_param[:-4].strip().replace(" ", "").lower()
     codice = codice_param[-4:]
 
     conn = get_connection()
     c = conn.cursor()
+    try:
+        giudice = c.execute(
+            "SELECT id, name, surname, apparatus FROM judges WHERE REPLACE(LOWER(surname), ' ', '') = ? AND code = ? LIMIT 1",
+            (cognome_url, codice)).fetchone()
+        if not giudice:
+            st.error("Giudice non trovato o codice errato.")
+            return
 
-    # Cerca giudice (uno qualsiasi con quel cognome e codice)
-    giudice = c.execute("""
-        SELECT id, name, surname, apparatus FROM judges
-        WHERE LOWER(surname) = ? AND code = ?
-        LIMIT 1
-    """, (cognome, codice)).fetchone()
+        giudice_id, nome, cognome_db, attrezzo_orig = giudice
 
-    if not giudice:
-        st.error("Giudice non trovato o codice errato.")
-        conn.close()
-        return
+        attrezzi_giudice = c.execute(
+            "SELECT DISTINCT apparatus FROM judges WHERE REPLACE(LOWER(surname), ' ', '') = ? AND code = ?",
+            (cognome_url, codice)).fetchall()
+        attrezzi_lista = [row[0] for row in attrezzi_giudice]
 
-    giudice_id, nome, cognome, attrezzo_orig = giudice
+        with st.container():
+            st.success(
+                f"<span style='font-size: 1.2em;'>👋 Benvenuto <b>{nome} {cognome_db.upper()}</b></span>  \n"
+                f"<span style='color: #666;'>Puoi inserire punteggi solo per gli attrezzi assegnati: "
+                f"<b>{', '.join(attrezzi_lista)}</b></span>",
+                icon="✅",
+                unsafe_allow_html=True
+            )
 
-    # Trova tutti gli attrezzi assegnati al giudice
-    attrezzi_giudice = c.execute("""
-        SELECT DISTINCT apparatus FROM judges
-        WHERE LOWER(surname) = LOWER(?) AND code = ?
-    """, (cognome, codice)).fetchall()
+        # Attrezzo selezionabile solo se >1
+        if len(attrezzi_lista) > 1:
+            selected_attrezzo = st.selectbox(
+                "Seleziona attrezzo per questa sessione:",
+                attrezzi_lista,
+                index=attrezzi_lista.index(attrezzo_orig) if attrezzo_orig in attrezzi_lista else 0,
+                key="sel_attrezzo"
+            )
+        else:
+            selected_attrezzo = attrezzi_lista[0]
+            st.info(f"Attrezzo assegnato: <b>{selected_attrezzo}</b>", icon="🛠️", unsafe_allow_html=True)
 
+        # Rotazione corrente
+        rotazione_corrente = int(c.execute("SELECT value FROM state WHERE key = 'rotazione_corrente'").fetchone()[0])
 
-    attrezzi_lista = [row[0] for row in attrezzi_giudice]
-    selected_attrezzo = st.selectbox(
-        "Seleziona attrezzo",
-        attrezzi_lista,
-        index=attrezzi_lista.index(attrezzo_orig) if attrezzo_orig in attrezzi_lista else 0
-    )
+        # --- Elenco atleti in rotazione corrente per l'attrezzo selezionato ---
+        atleti_rotazione = c.execute("""
+            SELECT r.athlete_id, a.name || ' ' || a.surname AS Atleta
+            FROM rotations r
+            JOIN athletes a ON a.id = r.athlete_id
+            WHERE r.apparatus = ? AND r.rotation_order = ?
+            ORDER BY r.id
+        """, (selected_attrezzo, rotazione_corrente)).fetchall()
+        ids_in_rotazione = {row[0] for row in atleti_rotazione}
 
-    if selected_attrezzo:
-        st.success(f"Benvenuto {nome} {cognome.upper()} – Attrezzo selezionato: {selected_attrezzo}")
-    else:
-        st.error("Errore: nessun attrezzo assegnato.")
+        # --- Punteggi già assegnati dal giudice ---
+        punteggi_assegnati = c.execute("""
+            SELECT s.athlete_id, a.name || ' ' || a.surname AS Atleta, s.apparatus AS Attrezzo, s.score AS Punteggio
+            FROM scores s
+            JOIN athletes a ON a.id = s.athlete_id
+            WHERE s.judge_id = ?
+              AND s.apparatus = ?
+              AND s.athlete_id IN (
+                  SELECT athlete_id FROM rotations WHERE apparatus = ? AND rotation_order = ?
+              )
+            ORDER BY Atleta
+        """, (giudice_id, selected_attrezzo, selected_attrezzo, rotazione_corrente)).fetchall()
 
-    # Trova i punteggi già attribuiti
-    punteggi_assegnati = c.execute("""
-        SELECT a.name || ' ' || a.surname AS Atleta, s.apparatus, s.score
-        FROM scores s
-        JOIN athletes a ON a.id = s.athlete_id
-        WHERE s.judge_id = ?
-        ORDER BY s.apparatus, Atleta
-    """, (giudice_id,)).fetchall()
+        # --- Costruzione DataFrame con badge e highlight ---
+        if atleti_rotazione:
+            # Atleti già valutati
+            id_valutati = {row[0] for row in punteggi_assegnati}
+            nomi_valutati = {row[1]: row[3] for row in punteggi_assegnati}  # nome: punteggio
 
-    # Rotazione corrente
-    rotazione_corrente = int(c.execute("SELECT value FROM state WHERE key = 'rotazione_corrente'").fetchone()[0])
+            table = []
+            for athlete_id, nome_atleta in atleti_rotazione:
+                stato = "Valutato" if athlete_id in id_valutati else "Da valutare"
+                punteggio = nomi_valutati.get(nome_atleta, "")
+                badge = (
+                    f"<span style='background:#e1ffe1; color:#228833; border-radius:4px; padding:2px 8px;'>Valutato</span>"
+                    if stato == "Valutato"
+                    else
+                    f"<span style='background:#ffeedd; color:#b8860b; border-radius:4px; padding:2px 8px;'>Da valutare</span>"
+                )
+                table.append({
+                    "Atleta": f"{nome_atleta} {badge}",
+                    "Punteggio": punteggio if punteggio != "" else "-",
+                    "Stato": stato,
+                })
+            df_all = pd.DataFrame(table)
 
-    # Atleti per rotazione e attrezzo selezionato
-    rotazioni = c.execute("""
-        SELECT r.id, a.name || ' ' || a.surname
-        FROM rotations r
-        JOIN athletes a ON a.id = r.athlete_id
-        WHERE r.apparatus = ? AND r.rotation_order = ?
-          AND r.athlete_id NOT IN (
-              SELECT athlete_id FROM scores
-              WHERE judge_id = ? AND apparatus = ?
-          )
-        ORDER BY r.id
-    """, (selected_attrezzo, rotazione_corrente, giudice_id, selected_attrezzo)).fetchall()
+            def highlight_row(row):
+                if row["Stato"] == "Valutato":
+                    if str(row["Punteggio"]) == "0.0" or str(row["Punteggio"]) == "0":
+                        return ["highlight-0"] * 3  # Tutta la riga rossa se punteggio 0
+                    return ["highlight-valutato"] * 3
+                return ["highlight-da-valutare"] * 3
 
-    if not rotazioni:
-        st.info("Nessun atleta in gara su questo attrezzo per la rotazione corrente.")
-        conn.close()
-        return
+            st.markdown("### <span style='color: #235;'>Situazione atleti nella rotazione corrente</span>", unsafe_allow_html=True)
+            st.dataframe(
+                df_all.style.apply(highlight_row, axis=1),
+                use_container_width=True,
+                hide_index=True,
+            )
+        else:
+            st.info("Nessun atleta assegnato per questa rotazione.")
 
-    with st.form("form_punteggio"):
-        selected_rotation = st.selectbox("Seleziona atleta", rotazioni, format_func=lambda x: x[1])
-        punteggio = st.number_input("Punteggio", min_value=0.0, max_value=20.0, step=0.05)
+        # --- Solo atleti non ancora valutati per inserimento punteggio ---
+        rotazioni = c.execute("""
+            SELECT r.id, a.name || ' ' || a.surname
+            FROM rotations r
+            JOIN athletes a ON a.id = r.athlete_id
+            WHERE r.apparatus = ? AND r.rotation_order = ?
+              AND r.athlete_id NOT IN (
+                  SELECT athlete_id FROM scores
+                  WHERE judge_id = ? AND apparatus = ?
+              )
+            ORDER BY r.id
+        """, (selected_attrezzo, rotazione_corrente, giudice_id, selected_attrezzo)).fetchall()
 
-        if st.form_submit_button("Invia punteggio"):
-            rot_id = selected_rotation[0]
-            row = c.execute("SELECT athlete_id FROM rotations WHERE id = ?", (rot_id,)).fetchone()
-            if not row:
-                st.error("Errore interno.")
-            else:
-                atleta_id = row[0]
-                existing = c.execute("""
-                    SELECT 1 FROM scores
-                    WHERE athlete_id = ? AND apparatus = ? AND judge_id = ?
-                """, (atleta_id, selected_attrezzo, giudice_id)).fetchone()
+        if not rotazioni:
+            st.success(
+                f"Hai già valutato tutti gli atleti su <b>{selected_attrezzo}</b> in questa rotazione! 👏",
+                icon="✅", unsafe_allow_html=True
+            )
+            return
 
-                if existing:
-                    st.warning("Hai già assegnato un punteggio a questo atleta.")
+        with st.form("form_punteggio"):
+            st.markdown(f"#### <span style='color:#003366'>Inserisci punteggio per <b>{selected_attrezzo}</b></span>", unsafe_allow_html=True)
+            selected_rotation = st.selectbox("Seleziona atleta", rotazioni, format_func=lambda x: x[1], key="sel_atleta")
+            punteggio = st.number_input(
+                "Punteggio", min_value=0.0, max_value=20.0, step=0.05, format="%.2f", key="punteggio"
+            )
+
+            if st.form_submit_button("Invia punteggio"):
+                rot_id = selected_rotation[0]
+                row = c.execute("SELECT athlete_id FROM rotations WHERE id = ?", (rot_id,)).fetchone()
+                if not row:
+                    st.error("Errore interno, riprovare.")
                 else:
-                    c.execute("""
-                        INSERT INTO scores (apparatus, athlete_id, judge_id, score)
-                        VALUES (?, ?, ?, ?)
-                    """, (selected_attrezzo, atleta_id, giudice_id, punteggio))
-                    conn.commit()
-                    st.success("Punteggio salvato correttamente.")
+                    atleta_id = row[0]
+                    existing = c.execute("""
+                        SELECT 1 FROM scores
+                        WHERE athlete_id = ? AND apparatus = ? AND judge_id = ?
+                    """, (atleta_id, selected_attrezzo, giudice_id)).fetchone()
 
-            # 🔁 aggiorna la tabella dei punteggi
-            punteggi_assegnati = c.execute("""
-                SELECT a.name || ' ' || a.surname AS Atleta, s.apparatus, s.score
-                FROM scores s
-                JOIN athletes a ON a.id = s.athlete_id
-                WHERE s.judge_id = ?
-                ORDER BY s.apparatus, Atleta
-            """, (giudice_id,)).fetchall()
-
-    if punteggi_assegnati:
-        df_punteggi = pd.DataFrame(punteggi_assegnati, columns=["Atleta", "Attrezzo", "Punteggio"])
-        st.subheader("Punteggi già assegnati")
-        st.table(df_punteggi)
-    else:
-        st.info("Nessun punteggio assegnato finora.")
-
-    conn.close()
+                    if existing:
+                        st.warning("Hai già assegnato un punteggio a questo atleta.")
+                    else:
+                        c.execute("""
+                            INSERT INTO scores (apparatus, athlete_id, judge_id, score)
+                            VALUES (?, ?, ?, ?)
+                        """, (selected_attrezzo, atleta_id, giudice_id, punteggio))
+                        conn.commit()
+                        if punteggio == 0.0:
+                            st.warning(
+                                f"Hai assegnato <b>0</b> punti. "
+                                f"Se l'atleta è assente o la prova è nulla, confermi il punteggio.",
+                                icon="⚠️", unsafe_allow_html=True
+                            )
+                        st.success(
+                            f"Punteggio <b>{punteggio:.2f}</b> inserito per <b>{selected_rotation[1]}</b> su <b>{selected_attrezzo}</b>.",
+                            icon="✅", unsafe_allow_html=True
+                        )
+    finally:
+        conn.close()
