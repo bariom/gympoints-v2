@@ -4,12 +4,9 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="580034fe-b43f-4fbd-a300-4d17bf8eba73" name="Changes" comment="Nuova UX di live">
+    <list default="true" id="580034fe-b43f-4fbd-a300-4d17bf8eba73" name="Changes" comment="Fix per conferma punteggio zero">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/admin.py" beforeDir="false" afterPath="$PROJECT_DIR$/admin.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/gym.db" beforeDir="false" afterPath="$PROJECT_DIR$/gym.db" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ranking.py" beforeDir="false" afterPath="$PROJECT_DIR$/ranking.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/setup_db.py" beforeDir="false" afterPath="$PROJECT_DIR$/setup_db.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/giudice.py" beforeDir="false" afterPath="$PROJECT_DIR$/giudice.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -106,30 +103,6 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1747744575802</updated>
-    </task>
-    <task id="LOCAL-00088" summary="Fix classifica provvisoria sul live">
-      <option name="closed" value="true" />
-      <created>1747987059127</created>
-      <option name="number" value="00088" />
-      <option name="presentableId" value="LOCAL-00088" />
-      <option name="project" value="LOCAL" />
-      <updated>1747987059127</updated>
-    </task>
-    <task id="LOCAL-00089" summary="Fix classifica provvisoria sul live">
-      <option name="closed" value="true" />
-      <created>1747987157906</created>
-      <option name="number" value="00089" />
-      <option name="presentableId" value="LOCAL-00089" />
-      <option name="project" value="LOCAL" />
-      <updated>1747987157906</updated>
-    </task>
-    <task id="LOCAL-00090" summary="Fix classifica provvisoria sul live">
-      <option name="closed" value="true" />
-      <created>1747987167698</created>
-      <option name="number" value="00090" />
-      <option name="presentableId" value="LOCAL-00090" />
-      <option name="project" value="LOCAL" />
-      <updated>1747987167698</updated>
     </task>
     <task id="LOCAL-00091" summary="Fix classifica provvisoria sul live">
       <option name="closed" value="true" />
@@ -499,7 +472,31 @@
       <option name="project" value="LOCAL" />
       <updated>1748247635009</updated>
     </task>
-    <option name="localTasksCounter" value="137" />
+    <task id="LOCAL-00137" summary="Inserito parametro per bloccare l'accesso al ranking finale">
+      <option name="closed" value="true" />
+      <created>1748248274458</created>
+      <option name="number" value="00137" />
+      <option name="presentableId" value="LOCAL-00137" />
+      <option name="project" value="LOCAL" />
+      <updated>1748248274458</updated>
+    </task>
+    <task id="LOCAL-00138" summary="Fix per classifica provvisoria">
+      <option name="closed" value="true" />
+      <created>1748248844633</created>
+      <option name="number" value="00138" />
+      <option name="presentableId" value="LOCAL-00138" />
+      <option name="project" value="LOCAL" />
+      <updated>1748248844633</updated>
+    </task>
+    <task id="LOCAL-00139" summary="Fix per conferma punteggio zero">
+      <option name="closed" value="true" />
+      <created>1748249334941</created>
+      <option name="number" value="00139" />
+      <option name="presentableId" value="LOCAL-00139" />
+      <option name="project" value="LOCAL" />
+      <updated>1748249334941</updated>
+    </task>
+    <option name="localTasksCounter" value="140" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -514,9 +511,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="Accesso alla pagina di admin con codice in URL" />
-    <MESSAGE value="Possibilità di mostrare classifica sul live." />
-    <MESSAGE value="Nuova funzionalità: Pagina per il voto del singolo giudice" />
     <MESSAGE value="Lista dei punteggi assegnati nella pagina giudice" />
     <MESSAGE value="Rivisto il metodo di punteggio.&#10;Dopo confronto con Davide Rusca che mi ha spiegato che in gara i giudici discutono i punteggi e ne comunicano uno solo di comune accordo, ho tolto il calcolo della media e si accetta direttamente il singolo punteggio." />
     <MESSAGE value="Fix errore tecnico in live" />
@@ -539,6 +533,9 @@
     <MESSAGE value="Migliorie grafiche su live" />
     <MESSAGE value="Torniamo alla vecchia UX di live" />
     <MESSAGE value="Nuova UX di live" />
-    <option name="LAST_COMMIT_MESSAGE" value="Nuova UX di live" />
+    <MESSAGE value="Inserito parametro per bloccare l'accesso al ranking finale" />
+    <MESSAGE value="Fix per classifica provvisoria" />
+    <MESSAGE value="Fix per conferma punteggio zero" />
+    <option name="LAST_COMMIT_MESSAGE" value="Fix per conferma punteggio zero" />
   </component>
 </project>
