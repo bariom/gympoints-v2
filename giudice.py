@@ -48,12 +48,13 @@ def show_giudice():
         attrezzi_lista = [row[0] for row in attrezzi_giudice]
 
         with st.container():
-            st.success(
-                f"<span style='font-size: 1.2em;'>👋 Benvenuto <b>{nome} {cognome_db.upper()}</b></span>  \n"
-                f"<span style='color: #666;'>Puoi inserire punteggi solo per gli attrezzi assegnati: "
-                f"<b>{', '.join(attrezzi_lista)}</b></span>",
-                icon="✅",
-                unsafe_allow_html=True
+            st.markdown(
+                f"""
+                <div style="background-color:#e6f4ea; border-radius:8px; padding:16px; border-left: 6px solid #3ca664; margin-bottom: 16px;">
+                    <span style='font-size: 1.3em;'>👋 <b>Benvenuto {nome} {cognome_db.upper()}</b></span><br>
+                    <span style='color: #555;'>Puoi inserire punteggi solo per gli attrezzi assegnati: <b>{', '.join(attrezzi_lista)}</b></span>
+                </div>
+                """, unsafe_allow_html=True
             )
 
         # Attrezzo selezionabile solo se >1
