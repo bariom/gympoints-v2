@@ -11,6 +11,13 @@ def show_ranking():
     conn = get_connection()
     c = conn.cursor()
 
+    # --- BLOCCO: mostra classifica finale solo se abilitata ---
+    show_final_ranking = c.execute("SELECT value FROM state WHERE key = 'show_final_ranking'").fetchone()
+    if not show_final_ranking or show_final_ranking[0] != "1":
+        st.warning("La classifica finale sarà disponibile solo a fine gara.")
+        conn.close()
+        return
+
     try:
         row = c.execute("SELECT value FROM state WHERE key = 'logica_classifica'").fetchone()
         use_olympic_logic = row and row[0] == "olimpica"

@@ -361,10 +361,17 @@ def show_admin():
         show_ranking_default = show_ranking_live[0] == "1" if show_ranking_live else False
         show_ranking_toggle = st.toggle("Mostra classifica nel Live", value=show_ranking_default)
 
+        # Mostra classifica finale
+        show_final_ranking = c.execute("SELECT value FROM state WHERE key = 'show_final_ranking'").fetchone()
+        show_final_default = show_final_ranking[0] == "1" if show_final_ranking else False
+        show_final_toggle = st.toggle("Mostra classifica finale", value=show_final_default)
+
         if st.button("Salva impostazioni"):
             c.execute("REPLACE INTO state (key, value) VALUES (?, ?)", ("nome_competizione", nome_competizione))
             c.execute("REPLACE INTO state (key, value) VALUES (?, ?)",
                       ("show_ranking_live", "1" if show_ranking_toggle else "0"))
+            c.execute("REPLACE INTO state (key, value) VALUES (?, ?)",
+                      ("show_final_ranking", "1" if show_final_toggle else "0"))
             conn.commit()
             st.success("Impostazioni aggiornate.")
 

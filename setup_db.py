@@ -58,6 +58,10 @@ c.execute("""INSERT OR REPLACE INTO state (key, value) VALUES ('rotazione_corren
 )
 """)
 
+c.execute("""INSERT INTO state (key, value) VALUES ('show_final_ranking', '0')
+ON CONFLICT(key) DO NOTHING
+""")
+
 conn.commit()
 conn.close()
 print("Database creato con successo.")
