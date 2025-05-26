@@ -403,7 +403,7 @@ def show_admin():
     #     st.dataframe(df, use_container_width=True)
 
 
-    tab5 = st.tabs(["Stato Gara"])[0]
+    tab5 = st.tabs(["PARAMETRI DELLO STATO GARA"])[0]
     with tab5:
         st.subheader("Gestione Stato Rotazione")
         current_rotation = st.number_input("Rotazione corrente", min_value=1, step=1, value=st.session_state.get("rotazione_corrente", 1))
