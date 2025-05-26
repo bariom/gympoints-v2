@@ -6,7 +6,7 @@ from streamlit_autorefresh import st_autorefresh
 def show_live():
     st_autorefresh(interval=2000, key="refresh_live")
 
-    MIN_HEIGHT = 210  # Altezza minima per ogni box attrezzo (regolabile!)
+    MIN_HEIGHT = 180  # Altezza minima per ogni box attrezzo (regolabile!)
 
     st.markdown("""
         <style>
