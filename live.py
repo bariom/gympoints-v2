@@ -6,138 +6,133 @@ from streamlit_autorefresh import st_autorefresh
 def show_live():
     st_autorefresh(interval=2000, key="refresh_live")
 
-    st.markdown("""
-        <style>
-        .main .block-container {padding-top: 0.5rem; max-width: 1400px;}
-        .attrezzo-box {
-            background: #f6fbff;
-            border: 3px solid #0074c7;
-            border-radius: 22px;
-            min-height: 160px;
-            margin-bottom: 32px;
-            margin-top: 10px;
-            box-shadow: 0 4px 18px #b2d8ff44;
-            padding: 14px 4px 18px 4px;
-            text-align: center;
-            display: flex; flex-direction: column; justify-content: center; align-items: center;
-        }
-        .attrezzo-label {
-            background: #0074c7;
-            color: #fff;
-            font-size: 1.4rem;
-            font-weight: 800;
-            border-radius: 14px;
-            display: inline-block;
-            padding: 7px 26px 7px 26px;
-            margin-bottom: 10px;
-        }
-        .atleta-name {
-            font-size: 1.32rem;
-            font-weight: 700;
-            color: #222;
-            margin: 13px 0 7px 0;
-        }
-        .score-ok {
-            color: #009966;
-            font-size: 2.9rem;
-            font-weight: bold;
-            margin: 7px 0 12px 0;
-            letter-spacing: 2px;
-            text-shadow: 0 2px 8px #d8ffe8;
-        }
-        .score-pending {
-            color: #ff9900;
-            font-size: 1.4rem;
-            font-weight: 800;
-            margin: 7px 0 4px 0;
-        }
-        .empty-assign {
-            background: #eaf2fa;
-            color: #111;
-            border-radius: 9px;
-            font-size: 1.13rem;
-            margin: 20px auto 7px auto;
-            padding: 8px 15px 8px 15px;
-            display: inline-block;
-            font-weight: 500;
-        }
-        </style>
-    """, unsafe_allow_html=True)
-
     conn = get_connection()
     c = conn.cursor()
 
     # Nome competizione
     nome_comp = c.execute("SELECT value FROM state WHERE key = 'nome_competizione'").fetchone()
     if nome_comp:
-        st.markdown(f"<h2 style='text-align: center; margin-bottom: 8px; color: #003366; letter-spacing: 1px; font-weight: 900;'>{nome_comp[0]}</h2>", unsafe_allow_html=True)
+        st.markdown(f"<h2 style='text-align: center; margin-bottom: 5px;'>{nome_comp[0]}</h2>", unsafe_allow_html=True)
 
     # Rotazione corrente
     rotazione_corrente = int(c.execute("SELECT value FROM state WHERE key = 'rotazione_corrente'").fetchone()[0])
-    st.markdown(f"<h3 style='text-align: center; margin-top: 0; color:#206;'><span style='font-size:1.35em;'>&#128260;</span> Rotazione <b>{rotazione_corrente}</b></h3>", unsafe_allow_html=True)
+    st.markdown(f"<h4 style='text-align: center; margin-top: 0;'>Rotazione {rotazione_corrente}</h4>", unsafe_allow_html=True)
+
+    # Switch per mostrare classifica provvisoria
+    show_ranking_live = c.execute("SELECT value FROM state WHERE key = 'show_ranking_live'").fetchone()
+    show_ranking_active = show_ranking_live and show_ranking_live[0] == "1"
+
+    # Switch logica classifica
+    logica_classifica = c.execute("SELECT value FROM state WHERE key = 'logica_classifica'").fetchone()
+    usa_logica_olimpica = logica_classifica and logica_classifica[0] == "olimpica"
 
     attrezzi = ["Suolo", "Cavallo a maniglie", "Anelli", "Volteggio", "Parallele", "Sbarra"]
 
-    # Costruisci una lista di 6 attrezzi per la griglia 2x3
-    grid = [attrezzi[i:i+2] for i in range(0, len(attrezzi), 2)]
+    if show_ranking_active:
+        col1, col2, col3, col4 = st.columns([1, 1, 1, 1])
+        col_map = [col1, col2, col3, col1, col2, col3]
+        col_classifica = col4
+    else:
+        col1, col2, col3 = st.columns([1, 1, 1])
+        col_map = [col1, col2, col3, col1, col2, col3]
+        col_classifica = col3
+
     now = time.time()
     if "progresso_live" not in st.session_state:
         st.session_state["progresso_live"] = {}
     if "score_timers" not in st.session_state:
         st.session_state["score_timers"] = {}
 
-    for riga in grid:
-        cols = st.columns(2, gap="large")
-        for i in range(2):
-            if i < len(riga):
-                attrezzo = riga[i]
-                with cols[i]:
-                    st.markdown('<div class="attrezzo-box">', unsafe_allow_html=True)
-                    st.markdown(f'<div class="attrezzo-label">{attrezzo}</div>', unsafe_allow_html=True)
-                    atleti = c.execute("""
-                        SELECT a.id, a.name || ' ' || a.surname AS nome
-                        FROM rotations r
-                        JOIN athletes a ON a.id = r.athlete_id
-                        WHERE r.apparatus = ? AND r.rotation_order = ?
-                        ORDER BY r.id
-                    """, (attrezzo, rotazione_corrente)).fetchall()
+    tutti_attrezzi_completati = True
 
-                    if not atleti:
-                        st.markdown('<div class="empty-assign">Nessun atleta assegnato.</div>', unsafe_allow_html=True)
-                        st.markdown('</div>', unsafe_allow_html=True)
-                        continue
+    for i, attrezzo in enumerate(attrezzi):
+        col = col_map[i]
+        col.markdown(f"<div style='background-color: #003366; color: white; text-align: center; padding: 6px; font-size: 22px; font-weight: bold; border-radius: 4px;'>{attrezzo}</div>", unsafe_allow_html=True)
 
-                    key_prog = f"{attrezzo}_index_{rotazione_corrente}"
-                    index = st.session_state["progresso_live"].get(key_prog, 0)
+        atleti = c.execute("""
+            SELECT a.id, a.name || ' ' || a.surname AS nome
+            FROM rotations r
+            JOIN athletes a ON a.id = r.athlete_id
+            WHERE r.apparatus = ? AND r.rotation_order = ?
+            ORDER BY r.id
+        """, (attrezzo, rotazione_corrente)).fetchall()
 
-                    if index >= len(atleti):
-                        st.markdown('<div class="score-pending" style="color:#229933;">Tutti completato!</div>', unsafe_allow_html=True)
-                        st.markdown('</div>', unsafe_allow_html=True)
-                        continue
+        if not atleti:
+            col.info("Nessun atleta assegnato.")
+            continue
 
-                    atleta_id, nome = atleti[index]
-                    st.markdown(f'<div class="atleta-name">{nome}</div>', unsafe_allow_html=True)
+        key_prog = f"{attrezzo}_index_{rotazione_corrente}"
+        index = st.session_state["progresso_live"].get(key_prog, 0)
 
-                    score_row = c.execute("""
-                        SELECT score FROM scores 
-                        WHERE athlete_id = ? AND apparatus = ?
-                    """, (atleta_id, attrezzo)).fetchone()
+        if index >= len(atleti):
+            col.success("Tutti gli atleti hanno completato la rotazione.")
+            continue
 
-                    if score_row:
-                        punteggio = round(score_row[0], 3)
-                        timer_key = f"{attrezzo}_{atleta_id}_{rotazione_corrente}"
-                        shown_at = st.session_state["score_timers"].get(timer_key)
-                        if shown_at is None:
-                            st.session_state["score_timers"][timer_key] = now
-                        if now - st.session_state["score_timers"][timer_key] < 20:
-                            st.markdown(f'<div class="score-ok">{punteggio:.3f}</div>', unsafe_allow_html=True)
-                        else:
-                            st.session_state["progresso_live"][key_prog] = index + 1
-                    else:
-                        st.markdown('<div class="score-pending">⏳ In attesa del punteggio...</div>', unsafe_allow_html=True)
-                    st.markdown('</div>', unsafe_allow_html=True)
+        tutti_attrezzi_completati = False
+        atleta_id, nome = atleti[index]
+        col.markdown(f"<div style='text-align: center; font-size: 20px; margin-top: 10px;'><b>{nome}</b></div>", unsafe_allow_html=True)
+
+        score_row = c.execute("""
+            SELECT score FROM scores 
+            WHERE athlete_id = ? AND apparatus = ?
+        """, (atleta_id, attrezzo)).fetchone()
+
+        if score_row:
+            punteggio = round(score_row[0], 3)
+            timer_key = f"{attrezzo}_{atleta_id}_{rotazione_corrente}"
+            shown_at = st.session_state["score_timers"].get(timer_key)
+
+            if shown_at is None:
+                st.session_state["score_timers"][timer_key] = now
+            if now - st.session_state["score_timers"][timer_key] < 20:
+                col.markdown(f"<div style='text-align: center; font-size: 28px; font-weight: bold; color: #009966;'>{punteggio:.3f}</div>", unsafe_allow_html=True)
             else:
-                # Colonna vuota: non mostrare nulla, NON aggiungere nessun box!
-                pass
+                st.session_state["progresso_live"][key_prog] = index + 1
+        else:
+            col.warning("⏳ In attesa del punteggio")
+
+    if tutti_attrezzi_completati:
+        st.info("Tutti gli attrezzi hanno completato la rotazione. Attendere l'avanzamento manuale.")
+
+    # Mostra classifica provvisoria
+    if show_ranking_active:
+        col_classifica.markdown("<h4 style='text-align: center;'>Classifica provvisoria</h4>", unsafe_allow_html=True)
+
+        classifica = c.execute("""
+            SELECT 
+                a.name || ' ' || a.surname AS nome,
+                a.club AS club,
+                SUM(s.score) AS totale
+            FROM scores s
+            JOIN athletes a ON a.id = s.athlete_id
+            GROUP BY s.athlete_id
+            ORDER BY totale DESC
+        """).fetchall()
+
+        posizione = 1
+        posizione_effettiva = 1
+        punteggio_precedente = None
+        skip_count = 0
+
+        for i, (nome, club, totale) in enumerate(classifica[:20], start=1):
+            if punteggio_precedente is not None:
+                if totale == punteggio_precedente:
+                    skip_count += 1
+                else:
+                    if usa_logica_olimpica:
+                        posizione_effettiva = posizione
+                        skip_count = 1
+                    else:
+                        posizione_effettiva += 1
+            else:
+                skip_count = 1
+
+            col_classifica.markdown(
+                f"<div style='font-size:16px;'>{posizione_effettiva}. <b>{nome} — {totale:.3f}</b><br/><i>{club}</i></div>",
+                unsafe_allow_html=True
+            )
+
+            punteggio_precedente = totale
+            posizione += 1
 
     conn.close()
