@@ -1,3 +1,4 @@
+
 import time
 import streamlit as st
 from db import get_connection
@@ -6,7 +7,7 @@ from streamlit_autorefresh import st_autorefresh
 def show_live():
     st_autorefresh(interval=2000, key="refresh_live")
 
-    MIN_HEIGHT = 210  # Altezza minima per ogni box attrezzo
+    MIN_HEIGHT = 210
 
     st.markdown("""
         <style>
@@ -17,7 +18,6 @@ def show_live():
     conn = get_connection()
     c = conn.cursor()
 
-    # Nome competizione
     nome_comp = c.execute("SELECT value FROM state WHERE key = 'nome_competizione'").fetchone()
     if nome_comp:
         st.markdown(
@@ -26,7 +26,6 @@ def show_live():
             unsafe_allow_html=True
         )
 
-    # Rotazione corrente
     rotazione_corrente = int(c.execute("SELECT value FROM state WHERE key = 'rotazione_corrente'").fetchone()[0])
     st.markdown(
         "<h3 style='text-align: center; margin-top: 0; color:#206; font-size:2.1rem;'>"
@@ -42,7 +41,6 @@ def show_live():
     logica_classifica = c.execute("SELECT value FROM state WHERE key = 'logica_classifica'").fetchone()
     usa_logica_olimpica = logica_classifica and logica_classifica[0] == "olimpica"
 
-    # Colonne per 6 attrezzi + eventualmente classifica provvisoria
     if show_ranking_active:
         col1, col2, col3, col4 = st.columns([1, 1, 1, 1])
         col_map = [col1, col2, col3, col1, col2, col3]
@@ -63,7 +61,6 @@ def show_live():
     for i, attrezzo in enumerate(attrezzi):
         col = col_map[i]
 
-        # Prepara contenuto del box attrezzo
         atleti = c.execute("""
             SELECT a.id, a.name || ' ' || a.surname AS nome
             FROM rotations r
@@ -83,19 +80,23 @@ def show_live():
             tutti_attrezzi_completati = False
             atleta_id, nome = atleti[index]
             score_row = c.execute("""
-                SELECT score FROM scores 
+                SELECT d, e, penalty, score FROM scores 
                 WHERE athlete_id = ? AND apparatus = ?
             """, (atleta_id, attrezzo)).fetchone()
             if score_row:
-                punteggio = round(score_row[0], 3)
+                d, e, penalty, totale = score_row
                 timer_key = f"{attrezzo}_{atleta_id}_{rotazione_corrente}"
                 shown_at = st.session_state["score_timers"].get(timer_key)
                 if shown_at is None:
                     st.session_state["score_timers"][timer_key] = now
                 if now - st.session_state["score_timers"][timer_key] < 20:
+                    dettaglio = ""
+                    if d is not None:
+                        dettaglio = f"<div style='font-size:1.3rem; margin-bottom:5px;'>D: {d:.1f}  E: {e:.1f}  Penalty: {penalty:.1f}</div>"
                     contenuto = (
                         f"<div style='font-size:2.02rem; font-weight:800; color:#fff; margin-bottom:6px;'>{nome}</div>"
-                        f"<div style='font-size:2.45rem; color:#25e56b; font-weight: 900;'>{punteggio:.3f}</div>"
+                        f"{dettaglio}"
+                        f"<div style='font-size:2.45rem; color:#25e56b; font-weight: 900;'>{totale:.3f}</div>"
                     )
                 else:
                     st.session_state["progresso_live"][key_prog] = index + 1
@@ -109,7 +110,6 @@ def show_live():
                     f"<div style='font-size:1.19rem; color:#fa9900; margin-top: 6px;'>⏳ In attesa del punteggio...</div>"
                 )
 
-        # BOX UNICO per titolo + contenuto
         col.markdown(
             f"""
             <div style='
@@ -145,7 +145,6 @@ def show_live():
             unsafe_allow_html=True
         )
 
-    # --- CLASSIFICA PROVVISORIA (corretto) ---
     if show_ranking_active and col_classifica:
         col_classifica.markdown("<h4 style='text-align: center;'>Classifica provvisoria</h4>", unsafe_allow_html=True)
 
