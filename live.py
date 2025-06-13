@@ -5,13 +5,18 @@ from db import get_connection
 from streamlit_autorefresh import st_autorefresh
 from PIL import Image
 import os
+import base64
+from io import BytesIO
+
+def image_to_base64(path):
+    with open(path, "rb") as img_file:
+        b64_data = base64.b64encode(img_file.read()).decode("utf-8")
+    return f"data:image/png;base64,{b64_data}"
 
 def show_live():
     st_autorefresh(interval=2000, key="refresh_live")
 
     MIN_HEIGHT = 210
-
-    # Percorso immagini (assumiamo img/ accanto a questo file)
     IMG_DIR = os.path.join(os.path.dirname(__file__), "img")
 
     st.markdown("""
@@ -40,20 +45,8 @@ def show_live():
 
     attrezzi = ["Suolo", "Cavallo a maniglie", "Anelli", "Volteggio", "Parallele", "Sbarra"]
 
-    show_ranking_live = c.execute("SELECT value FROM state WHERE key = 'show_ranking_live'").fetchone()
-    show_ranking_active = show_ranking_live and show_ranking_live[0] == "1"
-
-    logica_classifica = c.execute("SELECT value FROM state WHERE key = 'logica_classifica'").fetchone()
-    usa_logica_olimpica = logica_classifica and logica_classifica[0] == "olimpica"
-
-    if show_ranking_active:
-        col1, col2, col3, col4 = st.columns([1, 1, 1, 1])
-        col_map = [col1, col2, col3, col1, col2, col3]
-        col_classifica = col4
-    else:
-        col1, col2, col3 = st.columns([1, 1, 1])
-        col_map = [col1, col2, col3, col1, col2, col3]
-        col_classifica = None
+    col1, col2, col3 = st.columns([1, 1, 1])
+    col_map = [col1, col2, col3, col1, col2, col3]
 
     now = time.time()
     if "progresso_live" not in st.session_state:
@@ -115,13 +108,21 @@ def show_live():
                     f"<div style='font-size:1.19rem; color:#fa9900; margin-top: 6px;'>⏳ In attesa del punteggio...</div>"
                 )
 
-        # Rendering box attrezzo con icona
+        # Rendering box con immagine inline
+        nome_file_icona = attrezzo + ".png"
+        percorso_icona = os.path.join(IMG_DIR, nome_file_icona)
+
+        if os.path.exists(percorso_icona):
+            img_b64 = image_to_base64(percorso_icona)
+            img_html = f"<img src='{img_b64}' width='90' style='margin-bottom:12px;'/>"
+        else:
+            img_html = f"<div style='font-size: 1.5rem; font-weight: 700; margin-bottom: 8px;'>{attrezzo}</div>"
+
         col.markdown(
             f"""
             <div style='
                 background: #002d5d;
                 color: white;
-                font-size: 2.1rem;
                 font-weight: bold;
                 text-align: center;
                 border-radius: 15px;
@@ -132,24 +133,13 @@ def show_live():
                 flex-direction: column;
                 justify-content: flex-start;
                 align-items: center;
-                padding: 15px 10px 15px 10px;
-            '>
+                padding: 15px 10px 15px 10px;'>
+                {img_html}
+                <div style='width:100%;'>{contenuto}</div>
+            </div>
             """,
             unsafe_allow_html=True
         )
-
-        # Inseriamo l'immagine se presente
-        nome_file_icona = attrezzo + ".png"
-        percorso_icona = os.path.join(IMG_DIR, nome_file_icona)
-
-        if os.path.exists(percorso_icona):
-            image = Image.open(percorso_icona)
-            col.image(image, width=90)
-        else:
-            col.markdown(f"<div style='font-size: 1.5rem; font-weight: 700; margin-bottom: 8px;'>{attrezzo}</div>", unsafe_allow_html=True)
-
-        col.markdown(f"<div style='width:100%;'>{contenuto}</div>", unsafe_allow_html=True)
-        col.markdown("</div>", unsafe_allow_html=True)
 
     if tutti_attrezzi_completati:
         st.markdown(
