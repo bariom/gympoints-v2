@@ -19,16 +19,20 @@ def show_live():
     MIN_HEIGHT = 250
     IMG_DIR = os.path.join(os.path.dirname(__file__), "img")
 
-    # Iniettiamo tutti i CSS per full production mode
+    # Iniettiamo il CSS definitivo per il fullscreen totale
     st.markdown("""
         <style>
         .main .block-container {
-            padding-top: 0.5rem !important;
-            padding-bottom: 1rem !important;
+            padding-top: 0rem !important;
+            padding-bottom: 0rem !important;
             max-width: 1400px;
         }
         header {visibility: hidden;}
         footer {visibility: hidden;}
+        div.block-container:before {content:none !important;}
+        div.block-container:after {content:none !important;}
+        div[data-testid="stToolbar"] {display: none !important;}
+        section.main > div {padding-top: 0rem !important;}
         </style>
     """, unsafe_allow_html=True)
 
