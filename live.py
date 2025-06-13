@@ -16,7 +16,7 @@ def image_to_base64(path):
 def show_live():
     st_autorefresh(interval=2000, key="refresh_live")
 
-    MIN_HEIGHT = 300  # nuovo min-height globale stabile per tutti i box
+    MIN_HEIGHT = 250  # altezza finale stabilizzata a 250px
     IMG_DIR = os.path.join(os.path.dirname(__file__), "img")
 
     st.markdown("""
@@ -38,8 +38,8 @@ def show_live():
 
     rotazione_corrente = int(c.execute("SELECT value FROM state WHERE key = 'rotazione_corrente'").fetchone()[0])
     st.markdown(
-        "<h3 style='text-align: center; margin-top: 0; color:#206; font-size:2.1rem;'>"
-        "<span style='font-size:1.55em;'>&#128260;</span> Rotazione <b>{}</b></h3>".format(rotazione_corrente),
+        "<h3 style='text-align: center; margin-top: 0; color:#206; font-size:1.5rem;'>"
+        "<span style='font-size:1.3em;'>&#128260;</span> Rotazione <b>{}</b></h3>".format(rotazione_corrente),
         unsafe_allow_html=True
     )
 
