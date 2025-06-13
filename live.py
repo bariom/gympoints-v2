@@ -112,7 +112,7 @@ def show_live():
             else:
                 contenuto = (
                     f"<div style='font-size:2.02rem; font-weight:800; color:#fff; margin-bottom:6px;'>{nome}</div>"
-                    f"<div style='font-size:1.19rem; color:#fa9900; margin-top: 6px;'>⏳ In attesa del punteggio...</div>"
+                    f"<div style='font-size:1.19rem; color:#fa9900; margin-top: 6px; min-height: 70px;'>⏳ In attesa del punteggio...</div>"
                 )
 
         nome_file_icona = attrezzo + ".png"
