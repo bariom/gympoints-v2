@@ -38,8 +38,8 @@ def show_live():
 
     rotazione_corrente = int(c.execute("SELECT value FROM state WHERE key = 'rotazione_corrente'").fetchone()[0])
     st.markdown(
-        "<h3 style='text-align: center; margin-top: 0; color:#206; font-size:2.1rem;'>"
-        "<span style='font-size:1.55em;'>&#128260;</span> Rotazione <b>{}</b></h3>".format(rotazione_corrente),
+        "<h5 style='text-align: center; margin-top: 0; color:#206; font-size:2.1rem;'>"
+        "<span style='font-size:1.55em;'>&#128260;</span> Rotazione <b>{}</b></h5>".format(rotazione_corrente),
         unsafe_allow_html=True
     )
 
