@@ -16,7 +16,7 @@ def image_to_base64(path):
 def show_live():
     st_autorefresh(interval=2000, key="refresh_live")
 
-    MIN_HEIGHT = 210
+    MIN_HEIGHT = 300  # nuovo min-height globale stabile per tutti i box
     IMG_DIR = os.path.join(os.path.dirname(__file__), "img")
 
     st.markdown("""
@@ -70,7 +70,6 @@ def show_live():
         key_prog = f"{attrezzo}_index_{rotazione_corrente}"
         index = st.session_state["progresso_live"].get(key_prog, 0)
 
-        # AGGIUNTA SINCRONIZZAZIONE INDEX
         if index >= len(atleti) and len(atleti) > 0:
             index = len(atleti) - 1
             st.session_state["progresso_live"][key_prog] = index
@@ -112,7 +111,7 @@ def show_live():
             else:
                 contenuto = (
                     f"<div style='font-size:2.02rem; font-weight:800; color:#fff; margin-bottom:6px;'>{nome}</div>"
-                    f"<div style='font-size:1.19rem; color:#fa9900; margin-top: 6px; min-height: 70px;'>⏳ In attesa del punteggio...</div>"
+                    f"<div style='font-size:1.19rem; color:#fa9900; margin-top: 6px;'>⏳ In attesa del punteggio...</div>"
                 )
 
         nome_file_icona = attrezzo + ".png"
