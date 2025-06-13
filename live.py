@@ -19,7 +19,6 @@ def show_live():
     MIN_HEIGHT = 250
     IMG_DIR = os.path.join(os.path.dirname(__file__), "img")
 
-    # Iniettiamo il CSS definitivo per il fullscreen totale
     st.markdown("""
         <style>
         .main .block-container {
@@ -115,10 +114,15 @@ def show_live():
                     )
                 else:
                     st.session_state["progresso_live"][key_prog] = index + 1
-                    contenuto = (
-                        f"<div style='font-size:2.02rem; font-weight:800; color:#fff; margin-bottom:6px;'>{nome}</div>"
-                        f"<div style='font-size:1.1rem; color:#bed6f2;'>Aspetta il prossimo atleta...</div>"
-                    )
+
+                    # LOGICA NUOVA --> se siamo all'ultimo atleta, mostriamo la fine rotazione
+                    if (index + 1) >= len(atleti):
+                        contenuto = "<span style='font-size: 1.12rem; color: #ace5b6;'>✅ Tutti gli atleti hanno completato la rotazione.</span>"
+                    else:
+                        contenuto = (
+                            f"<div style='font-size:2.02rem; font-weight:800; color:#fff; margin-bottom:6px;'>{nome}</div>"
+                            f"<div style='font-size:1.1rem; color:#bed6f2;'>Aspetta il prossimo atleta...</div>"
+                        )
             else:
                 contenuto = (
                     f"<div style='font-size:2.02rem; font-weight:800; color:#fff; margin-bottom:6px;'>{nome}</div>"
