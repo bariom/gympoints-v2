@@ -16,7 +16,7 @@ def image_to_base64(path):
 def show_live():
     st_autorefresh(interval=2000, key="refresh_live")
 
-    MIN_HEIGHT = 250
+    MIN_HEIGHT = 245
     IMG_DIR = os.path.join(os.path.dirname(__file__), "img")
 
     st.markdown("""
