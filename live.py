@@ -3,11 +3,16 @@ import time
 import streamlit as st
 from db import get_connection
 from streamlit_autorefresh import st_autorefresh
+from PIL import Image
+import os
 
 def show_live():
     st_autorefresh(interval=2000, key="refresh_live")
 
     MIN_HEIGHT = 210
+
+    # Percorso immagini (assumiamo img/ accanto a questo file)
+    IMG_DIR = os.path.join(os.path.dirname(__file__), "img")
 
     st.markdown("""
         <style>
@@ -110,6 +115,7 @@ def show_live():
                     f"<div style='font-size:1.19rem; color:#fa9900; margin-top: 6px;'>⏳ In attesa del punteggio...</div>"
                 )
 
+        # Rendering box attrezzo con icona
         col.markdown(
             f"""
             <div style='
@@ -128,14 +134,22 @@ def show_live():
                 align-items: center;
                 padding: 15px 10px 15px 10px;
             '>
-                <div style='font-size: 2rem; font-weight: 900; margin-bottom: 12px; letter-spacing: 1.5px;'>{attrezzo}</div>
-                <div style='width:100%;'>
-                    {contenuto}
-                </div>
-            </div>
             """,
             unsafe_allow_html=True
         )
+
+        # Inseriamo l'immagine se presente
+        nome_file_icona = attrezzo + ".png"
+        percorso_icona = os.path.join(IMG_DIR, nome_file_icona)
+
+        if os.path.exists(percorso_icona):
+            image = Image.open(percorso_icona)
+            col.image(image, width=90)
+        else:
+            col.markdown(f"<div style='font-size: 1.5rem; font-weight: 700; margin-bottom: 8px;'>{attrezzo}</div>", unsafe_allow_html=True)
+
+        col.markdown(f"<div style='width:100%;'>{contenuto}</div>", unsafe_allow_html=True)
+        col.markdown("</div>", unsafe_allow_html=True)
 
     if tutti_attrezzi_completati:
         st.markdown(
@@ -144,48 +158,5 @@ def show_live():
             "</div>",
             unsafe_allow_html=True
         )
-
-    if show_ranking_active and col_classifica:
-        col_classifica.markdown("<h4 style='text-align: center;'>Classifica provvisoria</h4>", unsafe_allow_html=True)
-
-        classifica = c.execute("""
-            SELECT 
-                a.name || ' ' || a.surname AS nome,
-                a.club AS club,
-                SUM(s.score) AS totale
-            FROM scores s
-            JOIN athletes a ON a.id = s.athlete_id
-            GROUP BY s.athlete_id
-            ORDER BY totale DESC
-        """).fetchall()
-
-        if not classifica:
-            col_classifica.warning("Nessun punteggio disponibile per la classifica.")
-        else:
-            posizione = 1
-            posizione_effettiva = 1
-            punteggio_precedente = None
-            skip_count = 0
-
-            for i, (nome, club, totale) in enumerate(classifica[:20], start=1):
-                if punteggio_precedente is not None:
-                    if totale == punteggio_precedente:
-                        skip_count += 1
-                    else:
-                        if usa_logica_olimpica:
-                            posizione_effettiva = posizione
-                            skip_count = 1
-                        else:
-                            posizione_effettiva += 1
-                else:
-                    skip_count = 1
-
-                col_classifica.markdown(
-                    f"<div style='font-size:16px;'>{posizione_effettiva}. <b>{nome} — {totale:.3f}</b><br/><i>{club}</i></div>",
-                    unsafe_allow_html=True
-                )
-
-                punteggio_precedente = totale
-                posizione += 1
 
     conn.close()
