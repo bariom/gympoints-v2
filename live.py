@@ -113,15 +113,14 @@ def show_live():
                         f"{dettaglio}"
                     )
                 else:
-                    # Solo incrementiamo se ci sono ancora atleti
                     if index + 1 < len(atleti):
                         st.session_state["progresso_live"][key_prog] = index + 1
                         contenuto = (
                             f"<div style='font-size:2.02rem; font-weight:800; color:#fff; margin-bottom:6px;'>{nome}</div>"
                             f"<div style='font-size:1.1rem; color:#bed6f2;'>Aspetta il prossimo atleta...</div>"
                         )
-                    else:
-                        # Ultimo atleta → dopo 20s mostriamo la fine rotazione
+                    elif index + 1 == len(atleti):
+                        st.session_state["progresso_live"][key_prog] = index + 1
                         contenuto = "<span style='font-size: 1.12rem; color: #ace5b6;'>✅ Tutti gli atleti hanno completato la rotazione.</span>"
             else:
                 contenuto = (
