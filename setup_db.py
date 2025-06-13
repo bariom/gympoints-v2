@@ -41,7 +41,10 @@ CREATE TABLE IF NOT EXISTS scores (
     apparatus TEXT NOT NULL,
     athlete_id INTEGER NOT NULL,
     judge_id INTEGER NOT NULL,
-    score REAL NOT NULL,
+    d REAL,
+    e REAL,
+    penalty REAL,
+    score REAL,
     FOREIGN KEY (athlete_id) REFERENCES athletes(id),
     FOREIGN KEY (judge_id) REFERENCES judges(id)
 )

@@ -169,9 +169,11 @@ def show_giudice():
                         unsafe_allow_html=True)
             selected_rotation = st.selectbox("Seleziona atleta", rotazioni, format_func=lambda x: x[1],
                                              key="sel_atleta")
-            punteggio = st.number_input(
-                "Punteggio", min_value=0.0, max_value=20.0, step=0.05, format="%.2f", key="punteggio"
-            )
+            d = st.number_input("Difficulty (D)", min_value=0.0, max_value=10.0, step=0.1, format="%.1f")
+            e = st.number_input("Execution (E)", min_value=0.0, max_value=10.0, step=0.1, format="%.1f")
+            penalty = st.number_input("Penalty", min_value=0.0, max_value=5.0, step=0.1, format="%.1f")
+
+            punteggio = round(d + e - penalty, 3)
 
             # Session key unica per la conferma zero di questo atleta+attrezzo+rotazione
             confirm_key = f"conferma_zero_{selected_rotation[0]}_{selected_attrezzo}_{rotazione_corrente}"
@@ -200,9 +202,9 @@ def show_giudice():
                         st.warning("Hai già assegnato un punteggio a questo atleta.")
                     else:
                         c.execute("""
-                            INSERT INTO scores (apparatus, athlete_id, judge_id, score)
-                            VALUES (?, ?, ?, ?)
-                        """, (selected_attrezzo, atleta_id, giudice_id, punteggio))
+                            INSERT INTO scores (apparatus, athlete_id, judge_id, d, e, penalty, score)
+                            VALUES (?, ?, ?, ?, ?, ?, ?)
+                        """, (selected_attrezzo, atleta_id, giudice_id, d, e, penalty, punteggio))
                         conn.commit()
                         if punteggio == 0.0:
                             st.markdown(
