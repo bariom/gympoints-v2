@@ -16,12 +16,16 @@ def image_to_base64(path):
 def show_live():
     st_autorefresh(interval=2000, key="refresh_live")
 
-    MIN_HEIGHT = 250  # altezza finale stabilizzata a 250px
+    MIN_HEIGHT = 250
     IMG_DIR = os.path.join(os.path.dirname(__file__), "img")
 
     st.markdown("""
         <style>
-        .main .block-container {padding-top: 0.5rem; max-width: 1400px;}
+        .main .block-container {
+            padding-top: 0.5rem !important;
+            padding-bottom: 1rem !important;
+            max-width: 1400px;
+        }
         </style>
     """, unsafe_allow_html=True)
 
@@ -31,7 +35,7 @@ def show_live():
     nome_comp = c.execute("SELECT value FROM state WHERE key = 'nome_competizione'").fetchone()
     if nome_comp:
         st.markdown(
-            "<h2 style='text-align: center; margin-bottom: 10px; color: #003366; font-weight: 900; font-size:2.7rem;'>"
+            "<h2 style='text-align: center; margin: 0 0 5px 0; color: #003366; font-weight: 900; font-size: 1.9rem;'>"
             f"{nome_comp[0]}</h2>",
             unsafe_allow_html=True
         )
