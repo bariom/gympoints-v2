@@ -90,7 +90,7 @@ def show_live():
                 if now - st.session_state["score_timers"][timer_key] < 20:
                     dettaglio = ""
                     if d is not None:
-                        dettaglio = f"<div style='font-size:1.3rem; margin-bottom:5px;'>D: {d:.1f}  E: {e:.1f}  Penalty: {penalty:.1f}</div>"
+                        dettaglio = f"<div style='font-size:1.3rem; margin-bottom:5px;'>D: {d:.1f}  E: {e:.1f}</div>"
                     contenuto = (
                         f"<div style='font-size:2.02rem; font-weight:800; color:#fff; margin-bottom:6px;'>{nome}</div>"
                         f"{dettaglio}"

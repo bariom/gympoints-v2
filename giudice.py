@@ -171,7 +171,7 @@ def show_giudice():
                                              key="sel_atleta")
             d = st.number_input("Difficulty (D)", min_value=0.0, max_value=10.0, step=0.1, format="%.1f")
             e = st.number_input("Execution (E)", min_value=0.0, max_value=10.0, step=0.1, format="%.1f")
-            penalty = st.number_input("Penalty", min_value=0.0, max_value=5.0, step=0.1, format="%.1f")
+            penalty = 0.0  # default sempre zero per ora
 
             punteggio = round(d + e - penalty, 3)
 
