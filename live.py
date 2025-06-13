@@ -6,7 +6,6 @@ from streamlit_autorefresh import st_autorefresh
 from PIL import Image
 import os
 import base64
-from io import BytesIO
 
 def image_to_base64(path):
     with open(path, "rb") as img_file:
@@ -38,11 +37,8 @@ def show_live():
 
     rotazione_corrente = int(c.execute("SELECT value FROM state WHERE key = 'rotazione_corrente'").fetchone()[0])
     st.markdown(
-        """
-        <h3 style='text-align: center; margin: 0; padding: 0; color:#206; font-size:1.6rem; line-height: 1.1;'>
-            <span style='font-size:1.2em;'>&#128260;</span> Rotazione <b>{}</b>
-        </h3>
-        """.format(rotazione_corrente),
+        "<h3 style='text-align: center; margin-top: 0; color:#206; font-size:2.1rem;'>"
+        "<span style='font-size:1.55em;'>&#128260;</span> Rotazione <b>{}</b></h3>".format(rotazione_corrente),
         unsafe_allow_html=True
     )
 
@@ -93,11 +89,15 @@ def show_live():
                 if now - st.session_state["score_timers"][timer_key] < 20:
                     dettaglio = ""
                     if d is not None:
-                        dettaglio = f"<div style='font-size:1.3rem; margin-bottom:5px;'>D: {d:.1f}  E: {e:.1f}</div>"
+                        dettaglio = (
+                            f"<div style='font-size:1.8rem; margin-bottom:5px;'>"
+                            f"D: {d:.1f} &nbsp;&nbsp; E: {e:.1f} &nbsp;&nbsp; "
+                            f"<span style='color:#25e56b; font-weight:900; font-size:2.3rem;'>TOT: {totale:.3f}</span>"
+                            f"</div>"
+                        )
                     contenuto = (
                         f"<div style='font-size:2.02rem; font-weight:800; color:#fff; margin-bottom:6px;'>{nome}</div>"
                         f"{dettaglio}"
-                        f"<div style='font-size:2.45rem; color:#25e56b; font-weight: 900;'>{totale:.3f}</div>"
                     )
                 else:
                     st.session_state["progresso_live"][key_prog] = index + 1
@@ -111,7 +111,6 @@ def show_live():
                     f"<div style='font-size:1.19rem; color:#fa9900; margin-top: 6px;'>⏳ In attesa del punteggio...</div>"
                 )
 
-        # Rendering box con immagine inline
         nome_file_icona = attrezzo + ".png"
         percorso_icona = os.path.join(IMG_DIR, nome_file_icona)
 
