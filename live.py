@@ -19,6 +19,7 @@ def show_live():
     MIN_HEIGHT = 250
     IMG_DIR = os.path.join(os.path.dirname(__file__), "img")
 
+    # Iniettiamo tutti i CSS per full production mode
     st.markdown("""
         <style>
         .main .block-container {
@@ -26,6 +27,8 @@ def show_live():
             padding-bottom: 1rem !important;
             max-width: 1400px;
         }
+        header {visibility: hidden;}
+        footer {visibility: hidden;}
         </style>
     """, unsafe_allow_html=True)
 
