@@ -6,6 +6,7 @@ from streamlit_autorefresh import st_autorefresh
 from PIL import Image
 import os
 import base64
+from io import BytesIO
 
 def image_to_base64(path):
     with open(path, "rb") as img_file:
@@ -37,8 +38,11 @@ def show_live():
 
     rotazione_corrente = int(c.execute("SELECT value FROM state WHERE key = 'rotazione_corrente'").fetchone()[0])
     st.markdown(
-        "<h3 style='text-align: center; margin-top: 0; color:#206; font-size:2.1rem;'>"
-        "<span style='font-size:1.55em;'>&#128260;</span> Rotazione <b>{}</b></h3>".format(rotazione_corrente),
+        """
+        <h3 style='text-align: center; margin: 0; padding: 0; color:#206; font-size:1.6rem; line-height: 1.1;'>
+            <span style='font-size:1.2em;'>&#128260;</span> Rotazione <b>{}</b>
+        </h3>
+        """.format(rotazione_corrente),
         unsafe_allow_html=True
     )
 
@@ -111,6 +115,7 @@ def show_live():
                     f"<div style='font-size:1.19rem; color:#fa9900; margin-top: 6px;'>⏳ In attesa del punteggio...</div>"
                 )
 
+        # Rendering box con immagine inline
         nome_file_icona = attrezzo + ".png"
         percorso_icona = os.path.join(IMG_DIR, nome_file_icona)
 
