@@ -463,3 +463,16 @@ def show_admin():
             st.success("Impostazioni aggiornate.")
 
     conn.close()
+
+    # --- NUOVO TAB 7: ESPORTAZIONI ---
+
+    tab7 = st.tabs(["Esportazioni"])[0]
+    with tab7:
+        st.subheader("Esportazione Risultati")
+
+        from exporter import export_results_detailed
+        from pdf_export import export_pdf_results
+
+        export_results_detailed()
+        export_pdf_results()
+

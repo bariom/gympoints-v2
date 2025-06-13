@@ -4,8 +4,8 @@ import pandas as pd
 import io
 from db import get_connection
 
-def export_results():
-    st.title("Esportazione Risultati Ufficiali")
+def export_results_detailed():
+    st.title("Esportazione Risultati Dettagliati (D/E)")
 
     conn = get_connection()
     c = conn.cursor()
@@ -13,10 +13,11 @@ def export_results():
     df = pd.read_sql_query("""
         SELECT a.name || ' ' || a.surname AS Atleta,
                a.club AS Club,
-               IFNULL(SUM(s.score), 0) AS Totale
+               s.d AS D,
+               s.e AS E,
+               s.score AS Totale
         FROM scores s
         JOIN athletes a ON a.id = s.athlete_id
-        GROUP BY s.athlete_id
         ORDER BY Totale DESC
     """, conn)
 
@@ -27,19 +28,19 @@ def export_results():
     st.download_button(
         label="Scarica CSV",
         data=csv,
-        file_name='risultati.csv',
+        file_name='risultati_dettagliati.csv',
         mime='text/csv'
     )
 
     # Download XLSX
     buffer = io.BytesIO()
     with pd.ExcelWriter(buffer, engine='xlsxwriter') as writer:
-        df.to_excel(writer, sheet_name='Risultati', index=False)
+        df.to_excel(writer, sheet_name='Risultati Dettagliati', index=False)
     buffer.seek(0)
     st.download_button(
         label="Scarica Excel",
         data=buffer.getvalue(),
-        file_name='risultati.xlsx',
+        file_name='risultati_dettagliati.xlsx',
         mime='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
     )
 
