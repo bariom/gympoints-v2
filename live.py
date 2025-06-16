@@ -1,4 +1,3 @@
-
 import time
 import streamlit as st
 from db import get_connection
@@ -24,7 +23,7 @@ def show_live():
         .main .block-container {
             padding-top: 0rem !important;
             padding-bottom: 0rem !important;
-            max-width: 2000px;
+            max-width: 1400px;
         }
         header {visibility: hidden;}
         footer {visibility: hidden;}
@@ -53,146 +52,141 @@ def show_live():
         unsafe_allow_html=True
     )
 
-    col_left, col_right = st.columns([5, 1])  # Più spazio agli attrezzi
+    show_ranking_live = c.execute("SELECT value FROM state WHERE key = 'show_ranking_live'").fetchone()
+    show_ranking_active = show_ranking_live and show_ranking_live[0] == "1"
 
-    with col_left:
-    attrezzi = ["Suolo", "Cavallo a maniglie", "Anelli", "Volteggio", "Parallele", "Sbarra"]
+    if show_ranking_active:
+        st.markdown("<h3 style='margin-top:20px;'>Classifica Provvisoria</h3>", unsafe_allow_html=True)
 
-    col1, col2, col3 = st.columns([1, 1, 1])
-    col_map = [col1, col2, col3, col1, col2, col3]
+        classifica = c.execute("""
+            SELECT a.name || ' ' || a.surname AS nome, a.club, SUM(s.score) AS totale
+            FROM scores s
+            JOIN athletes a ON a.id = s.athlete_id
+            GROUP BY s.athlete_id
+            ORDER BY totale DESC
+        """).fetchall()
 
-    now = time.time()
-    if "progresso_live" not in st.session_state:
-        st.session_state["progresso_live"] = {}
-    if "score_timers" not in st.session_state:
-        st.session_state["score_timers"] = {}
+        posizione = 1
+        for nome, club, totale in classifica:
+            st.markdown(
+                f"<div style='font-size:1.5rem; margin:6px 0'>{posizione}. <b>{nome}</b> ({club}) — <span style='color:#25e56b;'>{totale:.3f}</span></div>",
+                unsafe_allow_html=True
+            )
+            posizione += 1
+    else:
+        attrezzi = ["Suolo", "Cavallo a maniglie", "Anelli", "Volteggio", "Parallele", "Sbarra"]
 
-    tutti_attrezzi_completati = True
+        col1, col2, col3 = st.columns([1, 1, 1])
+        col_map = [col1, col2, col3, col1, col2, col3]
 
-    for i, attrezzo in enumerate(attrezzi):
-        col = col_map[i]
+        now = time.time()
+        if "progresso_live" not in st.session_state:
+            st.session_state["progresso_live"] = {}
+        if "score_timers" not in st.session_state:
+            st.session_state["score_timers"] = {}
 
-        atleti = c.execute("""
-            SELECT a.id, a.name || ' ' || a.surname AS nome
-            FROM rotations r
-            JOIN athletes a ON a.id = r.athlete_id
-            WHERE r.apparatus = ? AND r.rotation_order = ?
-            ORDER BY r.id
-        """, (attrezzo, rotazione_corrente)).fetchall()
+        tutti_attrezzi_completati = True
 
-        key_prog = f"{attrezzo}_index_{rotazione_corrente}"
-        index = st.session_state["progresso_live"].get(key_prog, 0)
+        for i, attrezzo in enumerate(attrezzi):
+            col = col_map[i]
 
-        if index >= len(atleti) and len(atleti) > 0:
-            index = len(atleti) - 1
-            st.session_state["progresso_live"][key_prog] = index
+            atleti = c.execute("""
+                SELECT a.id, a.name || ' ' || a.surname AS nome
+                FROM rotations r
+                JOIN athletes a ON a.id = r.athlete_id
+                WHERE r.apparatus = ? AND r.rotation_order = ?
+                ORDER BY r.id
+            """, (attrezzo, rotazione_corrente)).fetchall()
 
-        if not atleti:
-            contenuto = "<span style='font-size: 1.23rem; font-weight:600; color:#bed6f2;'>Nessun atleta assegnato.</span>"
-        elif index >= len(atleti):
-            contenuto = "<span style='font-size: 1.12rem; color: #ace5b6;'>✅ Tutti gli atleti hanno completato la rotazione.</span>"
-        else:
-            tutti_attrezzi_completati = False
-            atleta_id, nome = atleti[index]
-            score_row = c.execute("""
-                SELECT d, e, penalty, score FROM scores 
-                WHERE athlete_id = ? AND apparatus = ?
-            """, (atleta_id, attrezzo)).fetchone()
-            if score_row:
-                d, e, penalty, totale = score_row
-                timer_key = f"{attrezzo}_{atleta_id}_{rotazione_corrente}"
-                shown_at = st.session_state["score_timers"].get(timer_key)
-                if shown_at is None:
-                    st.session_state["score_timers"][timer_key] = now
-                if now - st.session_state["score_timers"][timer_key] < 20:
-                    dettaglio = (
-                        f"<div style='font-size:1.8rem; margin-bottom:5px;'>"
-                        f"D: {d:.1f} &nbsp;&nbsp; E: {e:.1f} &nbsp;&nbsp; "
-                        f"<span style='color:#25e56b; font-weight:900; font-size:2.3rem;'>TOT: {totale:.3f}</span>"
-                        f"</div>"
-                    )
-                    contenuto = (
-                        f"<div style='font-size:2.02rem; font-weight:800; color:#fff; margin-bottom:6px;'>{nome}</div>"
-                        f"{dettaglio}"
-                    )
-                else:
-                    if index + 1 < len(atleti):
-                        st.session_state["progresso_live"][key_prog] = index + 1
+            key_prog = f"{attrezzo}_index_{rotazione_corrente}"
+            index = st.session_state["progresso_live"].get(key_prog, 0)
+
+            if index >= len(atleti) and len(atleti) > 0:
+                index = len(atleti) - 1
+                st.session_state["progresso_live"][key_prog] = index
+
+            if not atleti:
+                contenuto = "<span style='font-size: 1.23rem; font-weight:600; color:#bed6f2;'>Nessun atleta assegnato.</span>"
+            elif index >= len(atleti):
+                contenuto = "<span style='font-size: 1.12rem; color: #ace5b6;'>✅ Tutti gli atleti hanno completato la rotazione.</span>"
+            else:
+                tutti_attrezzi_completati = False
+                atleta_id, nome = atleti[index]
+                score_row = c.execute("""
+                    SELECT d, e, penalty, score FROM scores 
+                    WHERE athlete_id = ? AND apparatus = ?
+                """, (atleta_id, attrezzo)).fetchone()
+                if score_row:
+                    d, e, penalty, totale = score_row
+                    timer_key = f"{attrezzo}_{atleta_id}_{rotazione_corrente}"
+                    shown_at = st.session_state["score_timers"].get(timer_key)
+                    if shown_at is None:
+                        st.session_state["score_timers"][timer_key] = now
+                    if now - st.session_state["score_timers"][timer_key] < 20:
+                        dettaglio = (
+                            f"<div style='font-size:1.8rem; margin-bottom:5px;'>"
+                            f"D: {d:.1f} &nbsp;&nbsp; E: {e:.1f} &nbsp;&nbsp; "
+                            f"<span style='color:#25e56b; font-weight:900; font-size:2.3rem;'>TOT: {totale:.3f}</span>"
+                            f"</div>"
+                        )
                         contenuto = (
                             f"<div style='font-size:2.02rem; font-weight:800; color:#fff; margin-bottom:6px;'>{nome}</div>"
-                            f"<div style='font-size:1.1rem; color:#bed6f2;'>Aspetta il prossimo atleta...</div>"
+                            f"{dettaglio}"
                         )
-                    elif index + 1 == len(atleti):
-                        st.session_state["progresso_live"][key_prog] = index + 1
-                        contenuto = "<span style='font-size: 1.12rem; color: #ace5b6;'>✅ Tutti gli atleti hanno completato la rotazione.</span>"
+                    else:
+                        if index + 1 < len(atleti):
+                            st.session_state["progresso_live"][key_prog] = index + 1
+                            contenuto = (
+                                f"<div style='font-size:2.02rem; font-weight:800; color:#fff; margin-bottom:6px;'>{nome}</div>"
+                                f"<div style='font-size:1.1rem; color:#bed6f2;'>Aspetta il prossimo atleta...</div>"
+                            )
+                        elif index + 1 == len(atleti):
+                            st.session_state["progresso_live"][key_prog] = index + 1
+                            contenuto = "<span style='font-size: 1.12rem; color: #ace5b6;'>✅ Tutti gli atleti hanno completato la rotazione.</span>"
+                else:
+                    contenuto = (
+                        f"<div style='font-size:2.02rem; font-weight:800; color:#fff; margin-bottom:6px;'>{nome}</div>"
+                        f"<div style='font-size:1.19rem; color:#fa9900; margin-top: 6px;'>⏳ In attesa del punteggio...</div>"
+                    )
+
+            nome_file_icona = attrezzo + ".png"
+            percorso_icona = os.path.join(IMG_DIR, nome_file_icona)
+
+            if os.path.exists(percorso_icona):
+                img_b64 = image_to_base64(percorso_icona)
+                img_html = f"<img src='{img_b64}' width='90' style='margin-bottom:12px;'/>"
             else:
-                contenuto = (
-                    f"<div style='font-size:2.02rem; font-weight:800; color:#fff; margin-bottom:6px;'>{nome}</div>"
-                    f"<div style='font-size:1.19rem; color:#fa9900; margin-top: 6px;'>⏳ In attesa del punteggio...</div>"
-                )
+                img_html = f"<div style='font-size: 1.5rem; font-weight: 700; margin-bottom: 8px;'>{attrezzo}</div>"
 
-        nome_file_icona = attrezzo + ".png"
-        percorso_icona = os.path.join(IMG_DIR, nome_file_icona)
+            col.markdown(
+                f"""
+                <div style='
+                    background: #002d5d;
+                    color: white;
+                    font-weight: bold;
+                    text-align: center;
+                    border-radius: 15px;
+                    margin-bottom: 22px;
+                    margin-top: 10px;
+                    min-height: {MIN_HEIGHT}px;
+                    display: flex;
+                    flex-direction: column;
+                    justify-content: flex-start;
+                    align-items: center;
+                    padding: 15px 10px 15px 10px;'>
+                    {img_html}
+                    <div style='width:100%;'>{contenuto}</div>
+                </div>
+                """,
+                unsafe_allow_html=True
+            )
 
-        if os.path.exists(percorso_icona):
-            img_b64 = image_to_base64(percorso_icona)
-            img_html = f"<img src='{img_b64}' width='90' style='margin-bottom:12px;'/>"
-        else:
-            img_html = f"<div style='font-size: 1.5rem; font-weight: 700; margin-bottom: 8px;'>{attrezzo}</div>"
-
-        col.markdown(
-            f"""
-            <div style='
-                background: #002d5d;
-                color: white;
-                font-weight: bold;
-                text-align: center;
-                border-radius: 15px;
-                margin-bottom: 22px;
-                margin-top: 10px;
-                min-height: {MIN_HEIGHT}px;
-                display: flex;
-                flex-direction: column;
-                justify-content: flex-start;
-                align-items: center;
-                padding: 15px 10px 15px 10px;'>
-                {img_html}
-                <div style='width:100%;'>{contenuto}</div>
-            </div>
-            """,
-            unsafe_allow_html=True
-        )
-
-    if tutti_attrezzi_completati:
-        st.markdown(
-            "<div style='background:#eaffea; color:#0a5d0a; text-align:center; font-size:1.18rem; border-radius: 9px; padding:10px; margin-top:18px;'>"
-            "Tutti gli atleti hanno completato la rotazione."
-            "</div>",
-            unsafe_allow_html=True
-        )
-
-
-    with col_right:
-        show_ranking_live = c.execute("SELECT value FROM state WHERE key = 'show_ranking_live'").fetchone()
-        show_ranking_active = show_ranking_live and show_ranking_live[0] == "1"
-
-        if show_ranking_active:
-            st.markdown("<h3 style='margin-top:10px; text-align:center;'>Classifica</h3>", unsafe_allow_html=True)
-
-            classifica = c.execute("""
-                SELECT a.name || ' ' || a.surname AS nome, a.club, SUM(s.score) AS totale
-                FROM scores s
-                JOIN athletes a ON a.id = s.athlete_id
-                GROUP BY s.athlete_id
-                ORDER BY totale DESC
-            """).fetchall()
-
-            posizione = 1
-            for nome, club, totale in classifica:
-                st.markdown(
-                    f"<div style='font-size:1.1rem;'>{posizione}. <b>{nome}</b><br><span style='color: #999;'>{club}</span> — <span style='color:#25e56b;'>{totale:.3f}</span></div><hr style='margin:4px 0;'>",
-                    unsafe_allow_html=True
-                )
-                posizione += 1
+        if tutti_attrezzi_completati:
+            st.markdown(
+                "<div style='background:#eaffea; color:#0a5d0a; text-align:center; font-size:1.18rem; border-radius: 9px; padding:10px; margin-top:18px;'>"
+                "Tutti gli atleti hanno completato la rotazione."
+                "</div>",
+                unsafe_allow_html=True
+            )
 
     conn.close()
