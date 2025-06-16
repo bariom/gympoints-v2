@@ -5,19 +5,25 @@ import hashlib
 import qrcode
 import io
 import time
-from db import get_connection
-from PIL import Image
-from exporter import export_results_detailed
-from pdf_export import export_pdf_results
+import json
+import zipfile
 import os
 import base64
 import shutil
 import datetime
+from db import get_connection
+from PIL import Image
+from exporter import export_results_detailed
+from pdf_export import export_pdf_results
+
+# Utility immagine base64
 
 def image_to_base64(path):
     with open(path, "rb") as img_file:
         b64_data = base64.b64encode(img_file.read()).decode("utf-8")
     return f"data:image/png;base64,{b64_data}"
+
+# Genera codice giudice univoco
 
 def genera_codice_giudice(nome: str, cognome: str) -> str:
     combinazione = f"{nome.lower()}_{cognome.lower()}"
@@ -25,14 +31,76 @@ def genera_codice_giudice(nome: str, cognome: str) -> str:
     code = int(hash_val[:4], 16) % 10000
     return str(code).zfill(4)
 
+# Esportazione completa gara in ZIP
+
+def export_full_competition():
+    conn = get_connection()
+    c = conn.cursor()
+    data = {}
+
+    for table in ['athletes', 'judges', 'rotations', 'state']:
+        c.execute(f"SELECT * FROM {table}")
+        columns = [desc[0] for desc in c.description]
+        rows = c.fetchall()
+        data[table] = [dict(zip(columns, row)) for row in rows]
+
+    conn.close()
+
+    timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+    zip_filename = f"gara_export_{timestamp}.zip"
+    with zipfile.ZipFile(zip_filename, 'w') as zipf:
+        for table, content in data.items():
+            json_bytes = json.dumps(content, indent=2).encode('utf-8')
+            zipf.writestr(f"{table}.json", json_bytes)
+
+    with open(zip_filename, "rb") as f:
+        st.download_button("Download Dati Gara", f.read(), file_name=zip_filename, mime="application/zip")
+
+    os.remove(zip_filename)
+
+# Importazione completa gara da ZIP
+
+def import_full_competition(uploaded_zip):
+    with zipfile.ZipFile(uploaded_zip, 'r') as zipf:
+        files = zipf.namelist()
+        conn = get_connection()
+        c = conn.cursor()
+        for file in files:
+            table = file.replace('.json','')
+            with zipf.open(file) as f:
+                content = json.load(f)
+                c.execute(f"DELETE FROM {table}")
+                if content:
+                    columns = content[0].keys()
+                    placeholders = ", ".join(["?"] * len(columns))
+                    for row in content:
+                        values = tuple(row[col] for col in columns)
+                        c.execute(f"INSERT INTO {table} ({','.join(columns)}) VALUES ({placeholders})", values)
+        conn.commit()
+        conn.close()
+    st.success("Dati di gara importati correttamente")
+
+# Reset completo DB
+
+def reset_database():
+    conn = get_connection()
+    c = conn.cursor()
+    for table in ['scores', 'rotations', 'judges', 'athletes', 'state']:
+        c.execute(f"DELETE FROM {table}")
+    conn.commit()
+    conn.close()
+    st.success("Database resettato con successo")
+
+# MAIN ADMIN
+
 def show_admin():
     st.title("Amministrazione Gara")
 
     conn = get_connection()
     c = conn.cursor()
 
-    tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
-        "Atleti", "Giudici", "Rotazioni", "Esportazioni", "Stato Gara", "Impostazioni Gara"])
+    tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs([
+        "Atleti", "Giudici", "Rotazioni", "Esportazioni", "Stato Gara", "Impostazioni Gara", "Backup & Restore"])
 
     # --- GESTIONE ATLETI ---
     with tab1:
@@ -131,7 +199,7 @@ def show_admin():
     with tab3:
         st.subheader("Gestione Rotazioni")
         attrezzi = ["Suolo", "Cavallo a maniglie", "Anelli", "Volteggio", "Parallele", "Sbarra"]
-        athletes = c.execute("SELECT id, name || ' ' || surname || ' (' || club || ')' FROM athletes").fetchall()
+        athletes = c.execute("SELECT id, name || ' ' || surname || ' (" || club || ")" FROM athletes).fetchall()
 
         with st.form("add_rotation"):
             athlete_id = st.selectbox("Atleta", athletes, format_func=lambda x: x[1])
@@ -201,7 +269,7 @@ def show_admin():
             conn.commit()
             st.success("Rotazioni olimpiche 2–6 generate")
 
-    # --- ESPORTAZIONI ---
+    # --- ESPORTAZIONI STANDARD ---
     with tab4:
         st.subheader("Esportazioni")
         export_results_detailed()
@@ -226,11 +294,6 @@ def show_admin():
             conn.commit()
             st.success("Logica aggiornata")
 
-        if st.button("Backup database"):
-            timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-            shutil.copy("database.db", f"backup_{timestamp}.db")
-            st.success(f"Backup effettuato: backup_{timestamp}.db")
-
     # --- IMPOSTAZIONI GARA ---
     with tab6:
         st.subheader("Impostazioni generali")
@@ -252,5 +315,19 @@ def show_admin():
             c.execute("REPLACE INTO state (key, value) VALUES (?, ?)", ("show_final_ranking", "1" if show_final_toggle else "0"))
             conn.commit()
             st.success("Impostazioni aggiornate")
+
+    # --- BACKUP & RESTORE ---
+    with tab7:
+        st.subheader("Backup e Restore Gara Completa")
+
+        if st.button("Esporta Gara Completa"):
+            export_full_competition()
+
+        uploaded_zip = st.file_uploader("Importa dati gara (zip)", type="zip")
+        if uploaded_zip:
+            import_full_competition(uploaded_zip)
+
+        if st.button("Reset Completo Database"):
+            reset_database()
 
     conn.close()
