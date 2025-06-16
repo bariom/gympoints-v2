@@ -9,7 +9,6 @@ import json
 import zipfile
 import os
 import base64
-import shutil
 import datetime
 from db import get_connection
 from PIL import Image
@@ -17,14 +16,12 @@ from exporter import export_results_detailed
 from pdf_export import export_pdf_results
 
 # Utility immagine base64
-
 def image_to_base64(path):
     with open(path, "rb") as img_file:
         b64_data = base64.b64encode(img_file.read()).decode("utf-8")
     return f"data:image/png;base64,{b64_data}"
 
 # Genera codice giudice univoco
-
 def genera_codice_giudice(nome: str, cognome: str) -> str:
     combinazione = f"{nome.lower()}_{cognome.lower()}"
     hash_val = hashlib.sha256(combinazione.encode()).hexdigest()
@@ -32,7 +29,6 @@ def genera_codice_giudice(nome: str, cognome: str) -> str:
     return str(code).zfill(4)
 
 # Esportazione completa gara in ZIP
-
 def export_full_competition():
     conn = get_connection()
     c = conn.cursor()
@@ -59,7 +55,6 @@ def export_full_competition():
     os.remove(zip_filename)
 
 # Importazione completa gara da ZIP
-
 def import_full_competition(uploaded_zip):
     with zipfile.ZipFile(uploaded_zip, 'r') as zipf:
         files = zipf.namelist()
@@ -81,7 +76,6 @@ def import_full_competition(uploaded_zip):
     st.success("Dati di gara importati correttamente")
 
 # Reset completo DB
-
 def reset_database():
     conn = get_connection()
     c = conn.cursor()
@@ -92,7 +86,6 @@ def reset_database():
     st.success("Database resettato con successo")
 
 # MAIN ADMIN
-
 def show_admin():
     st.title("Amministrazione Gara")
 
@@ -331,3 +324,4 @@ def show_admin():
             reset_database()
 
     conn.close()
+
