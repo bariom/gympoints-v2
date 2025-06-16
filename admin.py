@@ -143,7 +143,11 @@ def show_admin():
                 conn.commit()
                 st.success("Rotazione aggiunta")
 
-        rot_table = c.execute("SELECT r.id, r.apparatus, a.name || ' ' || a.surname AS atleta, r.rotation_order FROM rotations r JOIN athletes a ON a.id = r.athlete_id ORDER BY r.rotation_order, r.apparatus, r.id").fetchall()
+        rot_table = c.execute("""
+            SELECT r.id, r.apparatus, a.name || ' ' || a.surname AS atleta, r.rotation_order
+            FROM rotations r JOIN athletes a ON a.id = r.athlete_id
+            ORDER BY r.rotation_order, r.apparatus, r.id
+        """).fetchall()
         st.dataframe(rot_table, use_container_width=True)
 
         if st.button("Reset completo rotazioni"):
@@ -151,17 +155,49 @@ def show_admin():
             conn.commit()
             st.success("Tutte le rotazioni eliminate")
 
+        # PREVIEW rotazioni olimpiche
+        st.markdown("### Preview rotazioni olimpiche 2–6")
+        gruppi = []
+        for att in attrezzi:
+            ids = c.execute("""
+                SELECT a.name || ' ' || a.surname
+                FROM rotations r
+                JOIN athletes a ON a.id = r.athlete_id
+                WHERE r.rotation_order = 1 AND r.apparatus = ?
+                ORDER BY r.id
+            """, (att,)).fetchall()
+            gruppi.append([x[0] for x in ids])
+
+        for rot in range(2, 7):
+            gruppi = [g[1:] + g[:1] if g else [] for g in gruppi]
+            gruppi = gruppi[-1:] + gruppi[:-1]
+            st.markdown(f"#### Rotazione {rot}")
+            for att, gruppo in zip(attrezzi, gruppi):
+                st.markdown(f"**{att}**:")
+                if gruppo:
+                    for idx, name in enumerate(gruppo, start=1):
+                        st.write(f"{idx}. {name}")
+                else:
+                    st.write("_(vuoto)_")
+
         if st.button("Genera rotazioni olimpiche 2–6"):
-            gruppi = []
+            gruppi_db = []
             for att in attrezzi:
-                ids = c.execute("SELECT athlete_id FROM rotations WHERE rotation_order = 1 AND apparatus = ? ORDER BY id", (att,)).fetchall()
-                gruppi.append([x[0] for x in ids])
+                ids = c.execute("""
+                    SELECT athlete_id
+                    FROM rotations
+                    WHERE rotation_order = 1 AND apparatus = ?
+                    ORDER BY id
+                """, (att,)).fetchall()
+                gruppi_db.append([x[0] for x in ids])
+
             for rot in range(2, 7):
-                gruppi = [g[1:] + g[:1] if g else [] for g in gruppi]
-                gruppi = gruppi[-1:] + gruppi[:-1]
-                for att, gruppo in zip(attrezzi, gruppi):
+                gruppi_db = [g[1:] + g[:1] if g else [] for g in gruppi_db]
+                gruppi_db = gruppi_db[-1:] + gruppi_db[:-1]
+                for att, gruppo in zip(attrezzi, gruppi_db):
                     for athlete_id in gruppo:
-                        c.execute("INSERT INTO rotations (apparatus, athlete_id, rotation_order) VALUES (?, ?, ?)", (att, athlete_id, rot))
+                        c.execute("INSERT INTO rotations (apparatus, athlete_id, rotation_order) VALUES (?, ?, ?)",
+                                  (att, athlete_id, rot))
             conn.commit()
             st.success("Rotazioni olimpiche 2–6 generate")
 
