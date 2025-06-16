@@ -119,9 +119,13 @@ def show_live():
                 if score_row:
                     d, e, penalty, totale = score_row
                     timer_key = f"{attrezzo}_{atleta_id}_{rotazione_corrente}"
-                    shown_at = st.session_state["score_timers"].get(timer_key)
-                    if shown_at is None:
+                    if timer_key not in st.session_state["score_timers"]:
                         st.session_state["score_timers"][timer_key] = now
+                        st.session_state[f"{timer_key}_last_score"] = totale
+                    else:
+                        if st.session_state.get(f"{timer_key}_last_score") != totale:
+                            st.session_state["score_timers"][timer_key] = now
+                            st.session_state[f"{timer_key}_last_score"] = totale
                     if now - st.session_state["score_timers"][timer_key] < 20:
                         dettaglio = (
                             f"<div style='font-size:1.8rem; margin-bottom:5px;'>"
