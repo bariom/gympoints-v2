@@ -15,11 +15,13 @@ from PIL import Image
 from exporter import export_results_detailed
 from pdf_export import export_pdf_results
 
+
 # Utility immagine base64
 def image_to_base64(path):
     with open(path, "rb") as img_file:
         b64_data = base64.b64encode(img_file.read()).decode("utf-8")
     return f"data:image/png;base64,{b64_data}"
+
 
 # Genera codice giudice univoco
 def genera_codice_giudice(nome: str, cognome: str) -> str:
@@ -27,6 +29,7 @@ def genera_codice_giudice(nome: str, cognome: str) -> str:
     hash_val = hashlib.sha256(combinazione.encode()).hexdigest()
     code = int(hash_val[:4], 16) % 10000
     return str(code).zfill(4)
+
 
 # Esportazione completa gara in ZIP
 def export_full_competition():
@@ -54,6 +57,7 @@ def export_full_competition():
 
     os.remove(zip_filename)
 
+
 # Importazione completa gara da ZIP
 def import_full_competition(uploaded_zip):
     with zipfile.ZipFile(uploaded_zip, 'r') as zipf:
@@ -61,7 +65,7 @@ def import_full_competition(uploaded_zip):
         conn = get_connection()
         c = conn.cursor()
         for file in files:
-            table = file.replace('.json','')
+            table = file.replace('.json', '')
             with zipf.open(file) as f:
                 content = json.load(f)
                 c.execute(f"DELETE FROM {table}")
@@ -75,6 +79,7 @@ def import_full_competition(uploaded_zip):
         conn.close()
     st.success("Dati di gara importati correttamente")
 
+
 # Reset completo DB
 def reset_database():
     conn = get_connection()
@@ -84,6 +89,7 @@ def reset_database():
     conn.commit()
     conn.close()
     st.success("Database resettato con successo")
+
 
 # MAIN ADMIN
 def show_admin():
@@ -107,8 +113,9 @@ def show_admin():
         if uploaded_file:
             df = pd.read_csv(uploaded_file)
             for _, row in df.iterrows():
-                exists = c.execute("SELECT 1 FROM athletes WHERE name = ? AND surname = ? AND club = ? AND category = ?",
-                                    (row['name'], row['surname'], row['club'], row['category'])).fetchone()
+                exists = c.execute(
+                    "SELECT 1 FROM athletes WHERE name = ? AND surname = ? AND club = ? AND category = ?",
+                    (row['name'], row['surname'], row['club'], row['category'])).fetchone()
                 if not exists:
                     c.execute("INSERT INTO athletes (name, surname, club, category) VALUES (?, ?, ?, ?)",
                               (row['name'], row['surname'], row['club'], row['category']))
@@ -133,7 +140,8 @@ def show_admin():
         with st.form("add_judge"):
             name = st.text_input("Nome Giudice")
             surname = st.text_input("Cognome Giudice")
-            apparatus = st.selectbox("Attrezzo", ["Suolo", "Cavallo a maniglie", "Anelli", "Volteggio", "Parallele", "Sbarra"])
+            apparatus = st.selectbox("Attrezzo",
+                                     ["Suolo", "Cavallo a maniglie", "Anelli", "Volteggio", "Parallele", "Sbarra"])
             if st.form_submit_button("Aggiungi giudice"):
                 code = genera_codice_giudice(name, surname)
                 c.execute("INSERT INTO judges (name, surname, apparatus, code) VALUES (?, ?, ?, ?)",
@@ -145,7 +153,8 @@ def show_admin():
         df_giudici = pd.read_sql_query("SELECT name, surname, apparatus, code FROM judges ORDER BY surname, name", conn)
         st.dataframe(df_giudici, use_container_width=True)
 
-        assegnazioni = c.execute("SELECT id, name, surname, apparatus, code FROM judges ORDER BY surname, name, apparatus").fetchall()
+        assegnazioni = c.execute(
+            "SELECT id, name, surname, apparatus, code FROM judges ORDER BY surname, name, apparatus").fetchall()
         if assegnazioni:
             labels = [f"{row[1]} {row[2]} – {row[3]} [codice: {row[4]}]" for row in assegnazioni]
             id_map = {label: row[0] for label, row in zip(labels, assegnazioni)}
@@ -157,8 +166,11 @@ def show_admin():
                 with st.form("edit_judge"):
                     new_name = st.text_input("Nome", value=nome_corr)
                     new_surname = st.text_input("Cognome", value=cognome_corr)
-                    new_apparatus = st.selectbox("Attrezzo", ["Suolo", "Cavallo a maniglie", "Anelli", "Volteggio", "Parallele", "Sbarra"],
-                        index=["Suolo", "Cavallo a maniglie", "Anelli", "Volteggio", "Parallele", "Sbarra"].index(apparatus_corr))
+                    new_apparatus = st.selectbox("Attrezzo",
+                                                 ["Suolo", "Cavallo a maniglie", "Anelli", "Volteggio", "Parallele",
+                                                  "Sbarra"],
+                                                 index=["Suolo", "Cavallo a maniglie", "Anelli", "Volteggio",
+                                                        "Parallele", "Sbarra"].index(apparatus_corr))
                     delete = st.checkbox("Elimina questa assegnazione")
                     submitted = st.form_submit_button("Applica modifiche")
                     if submitted:
@@ -167,7 +179,7 @@ def show_admin():
                         else:
                             code = genera_codice_giudice(new_name, new_surname)
                             c.execute("UPDATE judges SET name = ?, surname = ?, apparatus = ?, code = ? WHERE id = ?",
-                                (new_name, new_surname, new_apparatus, code, judge_id))
+                                      (new_name, new_surname, new_apparatus, code, judge_id))
                         conn.commit()
                         st.success("Modifica eseguita.")
                         st.rerun()
@@ -192,7 +204,7 @@ def show_admin():
     with tab3:
         st.subheader("Gestione Rotazioni")
         attrezzi = ["Suolo", "Cavallo a maniglie", "Anelli", "Volteggio", "Parallele", "Sbarra"]
-        athletes = c.execute("SELECT id, name || ' ' || surname || ' (" || club || ")" FROM athletes).fetchall()
+        athletes = c.execute("SELECT id, name || ' ' || surname || ' (' || club || ')' FROM athletes").fetchall()
 
         with st.form("add_rotation"):
             athlete_id = st.selectbox("Atleta", athletes, format_func=lambda x: x[1])
@@ -215,7 +227,6 @@ def show_admin():
             c.execute("DELETE FROM rotations")
             conn.commit()
             st.success("Tutte le rotazioni eliminate")
-
         # PREVIEW rotazioni olimpiche
         st.markdown("### Preview rotazioni olimpiche 2–6")
         gruppi = []
@@ -281,7 +292,8 @@ def show_admin():
 
         logica_attuale = c.execute("SELECT value FROM state WHERE key = 'logica_classifica'").fetchone()
         logica_attuale = logica_attuale[0] if logica_attuale else "incrementale"
-        nuova_logica = st.radio("Logica classifica:", ["incrementale", "olimpica"], index=0 if logica_attuale == "incrementale" else 1)
+        nuova_logica = st.radio("Logica classifica:", ["incrementale", "olimpica"],
+                                index=0 if logica_attuale == "incrementale" else 1)
         if st.button("Salva logica classifica"):
             c.execute("REPLACE INTO state (key, value) VALUES (?, ?)", ("logica_classifica", nuova_logica))
             conn.commit()
@@ -304,8 +316,10 @@ def show_admin():
 
         if st.button("Salva impostazioni gara"):
             c.execute("REPLACE INTO state (key, value) VALUES (?, ?)", ("nome_competizione", nome_gara))
-            c.execute("REPLACE INTO state (key, value) VALUES (?, ?)", ("show_ranking_live", "1" if show_ranking_toggle else "0"))
-            c.execute("REPLACE INTO state (key, value) VALUES (?, ?)", ("show_final_ranking", "1" if show_final_toggle else "0"))
+            c.execute("REPLACE INTO state (key, value) VALUES (?, ?)",
+                      ("show_ranking_live", "1" if show_ranking_toggle else "0"))
+            c.execute("REPLACE INTO state (key, value) VALUES (?, ?)",
+                      ("show_final_ranking", "1" if show_final_toggle else "0"))
             conn.commit()
             st.success("Impostazioni aggiornate")
 
@@ -324,4 +338,3 @@ def show_admin():
             reset_database()
 
     conn.close()
-
