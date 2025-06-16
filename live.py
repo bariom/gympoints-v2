@@ -24,7 +24,7 @@ def show_live():
         .main .block-container {
             padding-top: 0rem !important;
             padding-bottom: 0rem !important;
-            max-width: 1400px;
+            max-width: 2000px;
         }
         header {visibility: hidden;}
         footer {visibility: hidden;}
@@ -53,6 +53,9 @@ def show_live():
         unsafe_allow_html=True
     )
 
+    col_left, col_right = st.columns([5, 1])  # Più spazio agli attrezzi
+
+    with col_left:
     attrezzi = ["Suolo", "Cavallo a maniglie", "Anelli", "Volteggio", "Parallele", "Sbarra"]
 
     col1, col2, col3 = st.columns([1, 1, 1])
@@ -168,28 +171,28 @@ def show_live():
             unsafe_allow_html=True
         )
 
-    # --- CLASSIFICA LIVE SE ATTIVATA ---
 
-    show_ranking_live = c.execute("SELECT value FROM state WHERE key = 'show_ranking_live'").fetchone()
-    show_ranking_active = show_ranking_live and show_ranking_live[0] == "1"
+    with col_right:
+        show_ranking_live = c.execute("SELECT value FROM state WHERE key = 'show_ranking_live'").fetchone()
+        show_ranking_active = show_ranking_live and show_ranking_live[0] == "1"
 
-    if show_ranking_active:
-        st.markdown("<h3 style='margin-top:20px;'>Classifica Provvisoria</h3>", unsafe_allow_html=True)
+        if show_ranking_active:
+            st.markdown("<h3 style='margin-top:10px; text-align:center;'>Classifica</h3>", unsafe_allow_html=True)
 
-        classifica = c.execute("""
-            SELECT a.name || ' ' || a.surname AS nome, a.club, SUM(s.score) AS totale
-            FROM scores s
-            JOIN athletes a ON a.id = s.athlete_id
-            GROUP BY s.athlete_id
-            ORDER BY totale DESC
-        """).fetchall()
+            classifica = c.execute("""
+                SELECT a.name || ' ' || a.surname AS nome, a.club, SUM(s.score) AS totale
+                FROM scores s
+                JOIN athletes a ON a.id = s.athlete_id
+                GROUP BY s.athlete_id
+                ORDER BY totale DESC
+            """).fetchall()
 
-        posizione = 1
-        for nome, club, totale in classifica:
-            st.markdown(
-                f"<div style='font-size:1.2rem;'>{posizione}. <b>{nome}</b> ({club}) — <span style='color:#25e56b;'>{totale:.3f}</span></div>",
-                unsafe_allow_html=True
-            )
-            posizione += 1
+            posizione = 1
+            for nome, club, totale in classifica:
+                st.markdown(
+                    f"<div style='font-size:1.1rem;'>{posizione}. <b>{nome}</b><br><span style='color: #999;'>{club}</span> — <span style='color:#25e56b;'>{totale:.3f}</span></div><hr style='margin:4px 0;'>",
+                    unsafe_allow_html=True
+                )
+                posizione += 1
 
     conn.close()
